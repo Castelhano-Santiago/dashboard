@@ -1,0 +1,1701 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard VPAR — Gestão de Pessoal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0c0c0f;
+    --bg2: #111116;
+    --bg3: #16161d;
+    --surface: #1c1c26;
+    --surface2: #22222e;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #f0eff4;
+    --text2: #9b99ae;
+    --text3: #5e5c75;
+    --accent: #7c6df5;
+    --accent2: #a594f9;
+    --accent3: #c4b7ff;
+    --teal: #2dd4bf;
+    --coral: #f4845f;
+    --amber: #fbbf24;
+    --green: #4ade80;
+    --pink: #f472b6;
+    --font-head: 'Syne', sans-serif;
+    --font-body: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 220px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+    padding: 24px 0;
+  }
+
+  .sidebar-logo {
+    padding: 0 20px 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+
+  .sidebar-logo .brand {
+    font-family: var(--font-head);
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+
+  .sidebar-logo .brand span {
+    color: var(--accent2);
+  }
+
+  .sidebar-logo .sub {
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 20px;
+    cursor: pointer;
+    border-radius: 0;
+    transition: all 0.15s;
+    color: var(--text2);
+    font-size: 13.5px;
+    font-weight: 400;
+    border-left: 2px solid transparent;
+    margin: 1px 0;
+    text-decoration: none;
+  }
+
+  .nav-item:hover {
+    background: rgba(124,109,245,0.08);
+    color: var(--text);
+  }
+
+  .nav-item.active {
+    color: var(--accent3);
+    border-left-color: var(--accent);
+    background: rgba(124,109,245,0.1);
+    font-weight: 500;
+  }
+
+  .nav-icon {
+    width: 18px;
+    height: 18px;
+    opacity: 0.7;
+    flex-shrink: 0;
+  }
+
+  .nav-section {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 16px 20px 6px;
+    font-weight: 500;
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 16px 20px 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .file-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+    font-size: 11px;
+    color: var(--text2);
+  }
+
+  .file-badge .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--teal);
+    flex-shrink: 0;
+    box-shadow: 0 0 6px var(--teal);
+  }
+
+  /* Main content */
+  .main {
+    margin-left: 220px;
+    min-height: 100vh;
+  }
+
+  /* Top bar */
+  .topbar {
+    position: sticky;
+    top: 0;
+    background: rgba(12, 12, 15, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 50;
+  }
+
+  .topbar-title {
+    font-family: var(--font-head);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+
+  .topbar-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .topbar-date {
+    font-size: 12px;
+    color: var(--text3);
+  }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(45, 212, 191, 0.1);
+    border: 1px solid rgba(45, 212, 191, 0.25);
+    border-radius: 100px;
+    padding: 4px 10px;
+    font-size: 11.5px;
+    color: var(--teal);
+    font-weight: 500;
+  }
+
+  .status-pill::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--teal);
+  }
+
+  /* Page sections */
+  .section {
+    display: none;
+    padding: 28px 32px;
+    animation: fadeIn 0.2s ease;
+  }
+
+  .section.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* KPI Cards */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .kpi-card.purple::before { background: linear-gradient(90deg, var(--accent), transparent); }
+  .kpi-card.teal::before { background: linear-gradient(90deg, var(--teal), transparent); }
+  .kpi-card.coral::before { background: linear-gradient(90deg, var(--coral), transparent); }
+  .kpi-card.amber::before { background: linear-gradient(90deg, var(--amber), transparent); }
+  .kpi-card.green::before { background: linear-gradient(90deg, var(--green), transparent); }
+  .kpi-card.pink::before { background: linear-gradient(90deg, var(--pink), transparent); }
+
+  .kpi-card:hover {
+    border-color: var(--border2);
+    transform: translateY(-1px);
+  }
+
+  .kpi-label {
+    font-size: 11px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 500;
+    margin-bottom: 10px;
+  }
+
+  .kpi-value {
+    font-family: var(--font-head);
+    font-size: 30px;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -1px;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .kpi-sub {
+    font-size: 12px;
+    color: var(--text2);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .kpi-icon {
+    position: absolute;
+    right: 18px;
+    top: 18px;
+    opacity: 0.12;
+    font-size: 36px;
+  }
+
+  /* Charts grid */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .charts-grid-3 {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+  }
+
+  .chart-card.full { grid-column: 1 / -1; }
+
+  .chart-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .chart-title {
+    font-family: var(--font-head);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.2px;
+  }
+
+  .chart-subtitle {
+    font-size: 11.5px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  .chart-badge {
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 100px;
+    font-weight: 500;
+  }
+
+  .chart-badge.purple {
+    background: rgba(124,109,245,0.15);
+    color: var(--accent3);
+    border: 1px solid rgba(124,109,245,0.25);
+  }
+
+  /* Donut chart custom */
+  .donut-wrap {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .donut-canvas-wrap {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    flex-shrink: 0;
+  }
+
+  .donut-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .donut-center-num {
+    font-family: var(--font-head);
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+
+  .donut-center-label {
+    font-size: 10px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 2px;
+  }
+
+  .donut-legend {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .legend-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .legend-label {
+    font-size: 12.5px;
+    color: var(--text2);
+  }
+
+  .legend-value {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .legend-pct {
+    font-size: 11px;
+    color: var(--text3);
+    margin-left: 4px;
+  }
+
+  /* Bar chart horizontal */
+  .hbar-list {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+  }
+
+  .hbar-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .hbar-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .hbar-name {
+    font-size: 12.5px;
+    color: var(--text2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 60%;
+  }
+
+  .hbar-count {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .hbar-track {
+    height: 5px;
+    background: var(--bg3);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+
+  .hbar-fill {
+    height: 100%;
+    border-radius: 100px;
+    transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Table */
+  .table-wrap {
+    overflow: auto;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  thead tr {
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border2);
+  }
+
+  th {
+    font-family: var(--font-head);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 12px 16px;
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.15s;
+  }
+
+  th:hover { color: var(--text2); }
+  th.sorted { color: var(--accent2); }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+
+  tbody tr:hover { background: rgba(255,255,255,0.025); }
+  tbody tr:last-child { border-bottom: none; }
+
+  td {
+    padding: 11px 16px;
+    color: var(--text2);
+    white-space: nowrap;
+  }
+
+  td.primary { color: var(--text); font-weight: 500; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .badge-active {
+    background: rgba(74, 222, 128, 0.1);
+    color: var(--green);
+    border: 1px solid rgba(74, 222, 128, 0.2);
+  }
+
+  .badge-inactive {
+    background: rgba(244, 132, 95, 0.1);
+    color: var(--coral);
+    border: 1px solid rgba(244, 132, 95, 0.2);
+  }
+
+  /* Search + filters */
+  .table-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .search-box {
+    flex: 1;
+    min-width: 200px;
+    position: relative;
+  }
+
+  .search-box input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 9px 12px 9px 36px;
+    font-size: 13px;
+    color: var(--text);
+    font-family: var(--font-body);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-box input::placeholder { color: var(--text3); }
+  .search-box input:focus { border-color: var(--border2); }
+
+  .search-icon {
+    position: absolute;
+    left: 11px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text3);
+    font-size: 14px;
+    pointer-events: none;
+  }
+
+  .filter-select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    font-size: 13px;
+    color: var(--text2);
+    font-family: var(--font-body);
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    min-width: 140px;
+  }
+
+  .filter-select:focus { border-color: var(--border2); }
+  .filter-select option { background: var(--surface); }
+
+  .count-badge {
+    font-size: 12px;
+    color: var(--text3);
+    margin-left: auto;
+    white-space: nowrap;
+  }
+
+  /* Pagination */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 20px 0 4px;
+  }
+
+  .page-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    font-size: 13px;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: var(--font-body);
+    min-width: 36px;
+    text-align: center;
+  }
+
+  .page-btn:hover:not(:disabled) {
+    border-color: var(--border2);
+    color: var(--text);
+  }
+
+  .page-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+
+  .page-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  /* Section header */
+  .section-head {
+    margin-bottom: 24px;
+  }
+
+  .section-head h1 {
+    font-family: var(--font-head);
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+
+  .section-head p {
+    font-size: 13px;
+    color: var(--text3);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 2px; }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .charts-grid { grid-template-columns: 1fr; }
+    .charts-grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* Progress ring for metrics */
+  .ring-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 8px 0;
+  }
+
+  .ring-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+  }
+
+  .ring-label {
+    font-size: 11.5px;
+    color: var(--text3);
+    text-align: center;
+  }
+
+  .ring-num {
+    font-family: var(--font-head);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  /* Sparkline-style mini charts */
+  .mini-stat {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .mini-stat:last-child { border-bottom: none; }
+
+  .mini-stat-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .mini-icon {
+    width: 32px; height: 32px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .mini-stat-label { font-size: 13px; color: var(--text2); }
+  .mini-stat-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+
+  .mini-stat-right {
+    text-align: right;
+  }
+
+  .mini-stat-val {
+    font-family: var(--font-head);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .mini-stat-pct {
+    font-size: 11px;
+    color: var(--green);
+    margin-top: 1px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="brand">VPAR<span>.</span></div>
+    <div class="sub">Gestão de Pessoal</div>
+  </div>
+
+  <div class="nav-section">Painel</div>
+  <a class="nav-item active" onclick="showSection('visao-geral')">
+    <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+      <rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/>
+      <rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>
+    </svg>
+    Visão Geral
+  </a>
+  <a class="nav-item" onclick="showSection('pessoal')">
+    <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+    Perfil da Equipe
+  </a>
+  <a class="nav-item" onclick="showSection('financeiro')">
+    <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+      <line x1="12" y1="1" x2="12" y2="23"/>
+      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+    </svg>
+    Folha Salarial
+  </a>
+  <a class="nav-item" onclick="showSection('admissoes')">
+    <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+      <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+      <line x1="3" y1="10" x2="21" y2="10"/>
+    </svg>
+    Admissões
+  </a>
+
+  <div class="nav-section">Dados</div>
+  <a class="nav-item" onclick="showSection('colaboradores')">
+    <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/>
+      <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+      <polyline points="10 9 9 9 8 9"/>
+    </svg>
+    Colaboradores
+  </a>
+
+  <div class="sidebar-footer">
+    <div class="file-badge">
+      <div class="dot"></div>
+      <div>
+        <div style="font-weight:500;color:var(--text2)">Lista_VPAR.TXT</div>
+        <div style="color:var(--text3);font-size:10px">249 registros</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- Main -->
+<main class="main">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">Visão Geral</div>
+    <div class="topbar-meta">
+      <span class="topbar-date" id="topbar-date"></span>
+      <div class="status-pill">Dados carregados</div>
+    </div>
+  </div>
+
+  <!-- SECTION: Visão Geral -->
+  <section class="section active" id="section-visao-geral">
+    <div class="section-head">
+      <h1>Visão Geral</h1>
+      <p>Resumo executivo da força de trabalho</p>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card purple">
+        <div class="kpi-label">Total de Colaboradores</div>
+        <div class="kpi-value">249</div>
+        <div class="kpi-sub">cadastros no sistema</div>
+        <div class="kpi-icon">👥</div>
+      </div>
+      <div class="kpi-card teal">
+        <div class="kpi-label">Ativos</div>
+        <div class="kpi-value">241</div>
+        <div class="kpi-sub">96,8% do total</div>
+        <div class="kpi-icon">✅</div>
+      </div>
+      <div class="kpi-card coral">
+        <div class="kpi-label">Folha Total / mês</div>
+        <div class="kpi-value">R$814k</div>
+        <div class="kpi-sub">814.469,34 bruto</div>
+        <div class="kpi-icon">💰</div>
+      </div>
+      <div class="kpi-card amber">
+        <div class="kpi-label">Salário Médio</div>
+        <div class="kpi-value">R$3.380</div>
+        <div class="kpi-sub">por colaborador</div>
+        <div class="kpi-icon">📊</div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <!-- Sexo -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Distribuição por Sexo</div>
+            <div class="chart-subtitle">Composição de gênero</div>
+          </div>
+        </div>
+        <div class="donut-wrap">
+          <div class="donut-canvas-wrap">
+            <canvas id="chart-sexo" width="140" height="140" role="img" aria-label="Gráfico de distribuição por sexo"></canvas>
+            <div class="donut-center">
+              <div class="donut-center-num">249</div>
+              <div class="donut-center-label">total</div>
+            </div>
+          </div>
+          <div class="donut-legend">
+            <div class="legend-item">
+              <div class="legend-left">
+                <div class="legend-dot" style="background:#7c6df5"></div>
+                <div class="legend-label">Masculino</div>
+              </div>
+              <div class="legend-value">229 <span class="legend-pct">91,9%</span></div>
+            </div>
+            <div class="legend-item">
+              <div class="legend-left">
+                <div class="legend-dot" style="background:#f472b6"></div>
+                <div class="legend-label">Feminino</div>
+              </div>
+              <div class="legend-value">20 <span class="legend-pct">8,1%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estado Civil -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Estado Civil</div>
+            <div class="chart-subtitle">Composição familiar</div>
+          </div>
+        </div>
+        <div class="donut-wrap">
+          <div class="donut-canvas-wrap">
+            <canvas id="chart-ec" width="140" height="140" role="img" aria-label="Gráfico de estado civil"></canvas>
+            <div class="donut-center">
+              <div class="donut-center-num">229</div>
+              <div class="donut-center-label">registros</div>
+            </div>
+          </div>
+          <div class="donut-legend">
+            <div class="legend-item">
+              <div class="legend-left">
+                <div class="legend-dot" style="background:#2dd4bf"></div>
+                <div class="legend-label">Casado(a)</div>
+              </div>
+              <div class="legend-value">134 <span class="legend-pct">58,5%</span></div>
+            </div>
+            <div class="legend-item">
+              <div class="legend-left">
+                <div class="legend-dot" style="background:#a594f9"></div>
+                <div class="legend-label">Solteiro(a)</div>
+              </div>
+              <div class="legend-value">94 <span class="legend-pct">41,0%</span></div>
+            </div>
+            <div class="legend-item">
+              <div class="legend-left">
+                <div class="legend-dot" style="background:#f4845f"></div>
+                <div class="legend-label">Divorciado(a)</div>
+              </div>
+              <div class="legend-value">1 <span class="legend-pct">0,5%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Funções -->
+    <div class="chart-card" style="margin-bottom:16px">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Colaboradores por Função</div>
+          <div class="chart-subtitle">Distribuição dos cargos</div>
+        </div>
+        <span class="chart-badge purple">8 funções</span>
+      </div>
+      <div class="hbar-list" id="hbar-funcoes"></div>
+    </div>
+
+    <!-- Cidades -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Distribuição Geográfica</div>
+          <div class="chart-subtitle">Cidade de residência</div>
+        </div>
+      </div>
+      <div class="hbar-list" id="hbar-cidades"></div>
+    </div>
+  </section>
+
+  <!-- SECTION: Pessoal -->
+  <section class="section" id="section-pessoal">
+    <div class="section-head">
+      <h1>Perfil da Equipe</h1>
+      <p>Análise demográfica e composição da força de trabalho</p>
+    </div>
+
+    <div class="kpi-grid" style="grid-template-columns: repeat(3,1fr)">
+      <div class="kpi-card purple">
+        <div class="kpi-label">Idade Média</div>
+        <div class="kpi-value">46</div>
+        <div class="kpi-sub">anos</div>
+        <div class="kpi-icon">🎂</div>
+      </div>
+      <div class="kpi-card teal">
+        <div class="kpi-label">Maioria na faixa</div>
+        <div class="kpi-value">46–55</div>
+        <div class="kpi-sub">109 colaboradores</div>
+        <div class="kpi-icon">📋</div>
+      </div>
+      <div class="kpi-card pink">
+        <div class="kpi-label">Mulheres na equipe</div>
+        <div class="kpi-value">8,1%</div>
+        <div class="kpi-sub">20 colaboradoras</div>
+        <div class="kpi-icon">👩</div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Faixas Etárias</div>
+            <div class="chart-subtitle">Distribuição de idades</div>
+          </div>
+        </div>
+        <div style="position:relative;height:240px">
+          <canvas id="chart-age" role="img" aria-label="Gráfico de faixas etárias"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Sexo por Situação</div>
+            <div class="chart-subtitle">Ativos e inativos por gênero</div>
+          </div>
+        </div>
+        <div style="position:relative;height:240px">
+          <canvas id="chart-sexo-sit" role="img" aria-label="Gráfico sexo por situação"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Naturalidade — Principais Origens</div>
+          <div class="chart-subtitle">Cidade natal dos colaboradores</div>
+        </div>
+      </div>
+      <div class="hbar-list" id="hbar-naturalidade"></div>
+    </div>
+  </section>
+
+  <!-- SECTION: Financeiro -->
+  <section class="section" id="section-financeiro">
+    <div class="section-head">
+      <h1>Folha Salarial</h1>
+      <p>Análise financeira de remuneração</p>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card purple">
+        <div class="kpi-label">Folha Total / mês</div>
+        <div class="kpi-value">R$814k</div>
+        <div class="kpi-sub">bruto mensal</div>
+        <div class="kpi-icon">💵</div>
+      </div>
+      <div class="kpi-card teal">
+        <div class="kpi-label">Salário Médio</div>
+        <div class="kpi-value">R$3.380</div>
+        <div class="kpi-sub">por colaborador</div>
+        <div class="kpi-icon">📈</div>
+      </div>
+      <div class="kpi-card coral">
+        <div class="kpi-label">Maior Salário</div>
+        <div class="kpi-value">R$5.785</div>
+        <div class="kpi-sub">topo da tabela</div>
+        <div class="kpi-icon">🏆</div>
+      </div>
+      <div class="kpi-card green">
+        <div class="kpi-label">Menor Salário</div>
+        <div class="kpi-value">R$1.698</div>
+        <div class="kpi-sub">base da tabela</div>
+        <div class="kpi-icon">💡</div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Faixas Salariais</div>
+            <div class="chart-subtitle">Distribuição de remunerações</div>
+          </div>
+        </div>
+        <div style="position:relative;height:240px">
+          <canvas id="chart-salarios" role="img" aria-label="Gráfico de faixas salariais"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Salário Médio por Função</div>
+            <div class="chart-subtitle">Comparativo de remuneração</div>
+          </div>
+        </div>
+        <div style="position:relative;height:240px">
+          <canvas id="chart-sal-funcao" role="img" aria-label="Gráfico salário por função"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Top 10 — Maiores Salários</div>
+          <div class="chart-subtitle">Colaboradores com maior remuneração</div>
+        </div>
+      </div>
+      <div class="hbar-list" id="hbar-top-sal"></div>
+    </div>
+  </section>
+
+  <!-- SECTION: Admissões -->
+  <section class="section" id="section-admissoes">
+    <div class="section-head">
+      <h1>Histórico de Admissões</h1>
+      <p>Crescimento do quadro de pessoal ao longo do tempo</p>
+    </div>
+
+    <div class="kpi-grid" style="grid-template-columns: repeat(5,1fr)">
+      <div class="kpi-card purple">
+        <div class="kpi-label">2021</div>
+        <div class="kpi-value">124</div>
+        <div class="kpi-sub">admissões</div>
+      </div>
+      <div class="kpi-card teal">
+        <div class="kpi-label">2022</div>
+        <div class="kpi-value">36</div>
+        <div class="kpi-sub">admissões</div>
+      </div>
+      <div class="kpi-card coral">
+        <div class="kpi-label">2023</div>
+        <div class="kpi-value">8</div>
+        <div class="kpi-sub">admissões</div>
+      </div>
+      <div class="kpi-card amber">
+        <div class="kpi-label">2024</div>
+        <div class="kpi-value">34</div>
+        <div class="kpi-sub">admissões</div>
+      </div>
+      <div class="kpi-card green">
+        <div class="kpi-label">2025</div>
+        <div class="kpi-value">39</div>
+        <div class="kpi-sub">admissões</div>
+      </div>
+    </div>
+
+    <div class="chart-card" style="margin-bottom:16px">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Volume de Admissões por Ano</div>
+          <div class="chart-subtitle">Evolução do quadro de pessoal</div>
+        </div>
+      </div>
+      <div style="position:relative;height:260px">
+        <canvas id="chart-adm-anos" role="img" aria-label="Admissões por ano"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Acumulado do Quadro</div>
+          <div class="chart-subtitle">Crescimento acumulado de colaboradores</div>
+        </div>
+      </div>
+      <div style="position:relative;height:240px">
+        <canvas id="chart-adm-acum" role="img" aria-label="Crescimento acumulado"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION: Colaboradores -->
+  <section class="section" id="section-colaboradores">
+    <div class="section-head">
+      <h1>Colaboradores</h1>
+      <p>Lista completa com busca e filtros</p>
+    </div>
+
+    <div class="table-controls">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="Buscar por nome, função, matrícula..." oninput="filterTable()">
+      </div>
+      <select class="filter-select" id="filter-funcao" onchange="filterTable()">
+        <option value="">Todas as funções</option>
+      </select>
+      <select class="filter-select" id="filter-situacao" onchange="filterTable()">
+        <option value="">Qualquer situação</option>
+        <option value="A">Ativo</option>
+        <option value="I">Inativo</option>
+      </select>
+      <select class="filter-select" id="filter-cidade" onchange="filterTable()">
+        <option value="">Todas as cidades</option>
+      </select>
+      <span class="count-badge" id="table-count"></span>
+    </div>
+
+    <div class="table-wrap">
+      <table id="main-table">
+        <thead>
+          <tr>
+            <th onclick="sortTable('matricula')" data-col="matricula">Matrícula ↕</th>
+            <th onclick="sortTable('nome')" data-col="nome">Nome ↕</th>
+            <th onclick="sortTable('funcao')" data-col="funcao">Função ↕</th>
+            <th onclick="sortTable('salario')" data-col="salario">Salário ↕</th>
+            <th onclick="sortTable('cidade')" data-col="cidade">Cidade ↕</th>
+            <th onclick="sortTable('dt_adm')" data-col="dt_adm">Admissão ↕</th>
+            <th onclick="sortTable('idade')" data-col="idade">Idade ↕</th>
+            <th>Situação</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="pagination"></div>
+  </section>
+</main>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const DATA = {"total":249,"ativos":241,"inativos":8,"sexo":{"Masculino":229,"Feminino":20},"funcoes":{"MOTORISTA":206,"PROMOT DE VENDAS":7,"AG DE PORTARIA A":6,"MOTORISTA VANS":4,"AUX.TRAFEGO A2":3,"MANOBRISTA B":2,"MOT INSTRUTOR":1,"GER OPER JUNIOR":1},"estado_civil":{"SOLTEIRO(A)":94,"CASADO(A)":134,"DIVORCIADO(A)":1},"cidades":{"CUIABA":165,"VARZEA GRANDE":25,"SANTO ANTONIO DO LEV":1},"anos_adm":{"2021":124,"2022":36,"2023":8,"2024":34,"2025":39},"total_folha":814469.34,"media_sal":3379.54,"age_groups":{"18-25":7,"26-35":18,"36-45":88,"46-55":109,"56+":23},"sal_ranges":{"Até R$2k":9,"R$2k-3k":21,"R$3k-3.5k":1,"R$3.5k-5k":208,"Acima R$5k":2}};
+
+// Full records will be embedded here (abbreviated for performance)
+const RECORDS = [{"nome": "ALEXANDRE SOUSA CORREIA ROCHA", "dt_nascto": "21/08/1974", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CPA I", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010002", "situacao": "A", "salbase": 3500.0, "idade": 51, "ano_adm": 2021}, {"nome": "VALDOMIRO PEREIRA", "dt_nascto": "29/08/1967", "estado_civil": "CASADO(A)", "naturalidade": "SAO PAULO", "sexo": "M", "bairro": "NOVA ESPERANÇA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010003", "situacao": "A", "salbase": 3500.0, "idade": 58, "ano_adm": 2021}, {"nome": "LUCIVALDO MAGALHAES DA SILVA", "dt_nascto": "08/10/1973", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "JD FLORIANOPOLIS", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010004", "situacao": "A", "salbase": 3500.0, "idade": 52, "ano_adm": 2021}, {"nome": "REGINALDO LEMES DE OLIVEIRA", "dt_nascto": "26/05/1976", "estado_civil": "CASADO(A)", "naturalidade": "POCONE", "sexo": "M", "bairro": "CPA II", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010005", "situacao": "A", "salbase": 3500.0, "idade": 49, "ano_adm": 2021}, {"nome": "ALEX CUNHA DE ARRUDA", "dt_nascto": "27/07/1984", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "B. R. FLOR DE LIZ", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010006", "situacao": "A", "salbase": 3500.0, "idade": 41, "ano_adm": 2021}, {"nome": "JULIMAR XAVIER DE CAMPOS", "dt_nascto": "13/02/1970", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "JARDIM COSTA VERDE", "cidade": "VARZEA GRANDE", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010008", "situacao": "A", "salbase": 3500.0, "idade": 56, "ano_adm": 2021}, {"nome": "JEODENIL LEVI DA SILVA", "dt_nascto": "09/03/1962", "estado_civil": "CASADO(A)", "naturalidade": "POCONE", "sexo": "M", "bairro": "JOSE PINTO", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010009", "situacao": "A", "salbase": 3500.0, "idade": 64, "ano_adm": 2021}, {"nome": "WELITON PEREIRA DA SILVA", "dt_nascto": "24/03/1985", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "JARDIM ITORORO", "cidade": "VARZEA GRANDE", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010010", "situacao": "A", "salbase": 3500.0, "idade": 41, "ano_adm": 2021}, {"nome": "VANILDO COSTA DOS SANTOS", "dt_nascto": "27/07/1978", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "PEDRA 90", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010011", "situacao": "A", "salbase": 3500.0, "idade": 47, "ano_adm": 2021}, {"nome": "JOSE PAULO DE OLIVEIRA SOARES", "dt_nascto": "04/09/1979", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CANJICA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010012", "situacao": "A", "salbase": 3500.0, "idade": 46, "ano_adm": 2021}, {"nome": "JOSIAS SANTANA MACHADO", "dt_nascto": "07/01/1988", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CPA IV", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010013", "situacao": "A", "salbase": 3500.0, "idade": 38, "ano_adm": 2021}, {"nome": "ALIZANGELA DE SOUZA", "dt_nascto": "17/10/1979", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "F", "bairro": "PARQUE ATALAIA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010014", "situacao": "A", "salbase": 3500.0, "idade": 46, "ano_adm": 2021}, {"nome": "ADAO TOMAZ PEREIRA", "dt_nascto": "28/01/1973", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "VISTA ALEGRE COXIPO", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010015", "situacao": "A", "salbase": 3500.0, "idade": 53, "ano_adm": 2021}, {"nome": "LUIZ FERNANDO PEREIRA BARBOSA", "dt_nascto": "18/07/1987", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "TIJUCAL", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010016", "situacao": "A", "salbase": 3500.0, "idade": 38, "ano_adm": 2021}, {"nome": "LEIDILAURA DO AMARAL", "dt_nascto": "08/09/1980", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "F", "bairro": "NOVA CONQUISTA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010017", "situacao": "A", "salbase": 3500.0, "idade": 45, "ano_adm": 2021}, {"nome": "JOSE ALVES PAIVA", "dt_nascto": "10/10/1962", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "RENASCER", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010018", "situacao": "A", "salbase": 3500.0, "idade": 63, "ano_adm": 2021}, {"nome": "MARCELO ALMEIDA DE AZEVEDO", "dt_nascto": "09/02/1982", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "PARQUE ATALAIA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010019", "situacao": "A", "salbase": 3500.0, "idade": 44, "ano_adm": 2021}, {"nome": "GEOVA EVANGELISTA DA SILVA", "dt_nascto": "15/09/1970", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "MARINGA I", "cidade": "VARZEA GRANDE", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010021", "situacao": "A", "salbase": 3500.0, "idade": 55, "ano_adm": 2021}, {"nome": "VANILDO SILVA SANTANA", "dt_nascto": "05/07/1984", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "JAIME CAMPOS", "cidade": "VARZEA GRANDE", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010022", "situacao": "A", "salbase": 3500.0, "idade": 41, "ano_adm": 2021}, {"nome": "SILVINHO ANTONIO FERREIRA", "dt_nascto": "08/08/1971", "estado_civil": "CASADO(A)", "naturalidade": "IPORA", "sexo": "M", "bairro": "JARDIM IMPERIAL II", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010023", "situacao": "A", "salbase": 3500.0, "idade": 54, "ano_adm": 2021}, {"nome": "LINDOMAR LEITE MACHADO", "dt_nascto": "25/06/1974", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "RES ITAPAJE", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010024", "situacao": "A", "salbase": 3500.0, "idade": 51, "ano_adm": 2021}, {"nome": "SAMOEL ANTONIO DA SILVA", "dt_nascto": "22/11/1974", "estado_civil": "SOLTEIRO(A)", "naturalidade": "ACORIZAL", "sexo": "M", "bairro": "RESIDENCIAL COXIPO", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010025", "situacao": "A", "salbase": 3500.0, "idade": 51, "ano_adm": 2021}, {"nome": "SIDNEY FERREIRA GANDES", "dt_nascto": "14/02/1975", "estado_civil": "SOLTEIRO(A)", "naturalidade": "DOM AQUINO", "sexo": "M", "bairro": "SAO FRANCISCO", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010027", "situacao": "A", "salbase": 3500.0, "idade": 51, "ano_adm": 2021}, {"nome": "ROSINEI MENINO DOS SANTOS RAMAO", "dt_nascto": "25/12/1972", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "OURO FINO", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010029", "situacao": "A", "salbase": 3500.0, "idade": 53, "ano_adm": 2021}, {"nome": "GENEZIO ALVES PEREIRA", "dt_nascto": "01/03/1967", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "DOM BOSCO", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010030", "situacao": "A", "salbase": 3500.0, "idade": 59, "ano_adm": 2021}, {"nome": "CELSO BENEDITO DE LARA", "dt_nascto": "06/04/1973", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "ALVORADA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010031", "situacao": "A", "salbase": 3500.0, "idade": 53, "ano_adm": 2021}, {"nome": "JANCE SERGIO DA COSTA", "dt_nascto": "06/02/1980", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "TIJUCAL", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010033", "situacao": "A", "salbase": 3500.0, "idade": 46, "ano_adm": 2021}, {"nome": "SERGIO PEREIRA DA SILVA", "dt_nascto": "15/10/1974", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "JARDIM VITORIA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010034", "situacao": "A", "salbase": 3500.0, "idade": 51, "ano_adm": 2021}, {"nome": "VALDOMIRO JOAO DE ARRUDA", "dt_nascto": "02/09/1975", "estado_civil": "CASADO(A)", "naturalidade": "ACORIZAL", "sexo": "M", "bairro": "CPA 3", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010035", "situacao": "A", "salbase": 3500.0, "idade": 50, "ano_adm": 2021}, {"nome": "JOENIL MANOEL DA SILVA", "dt_nascto": "22/09/1967", "estado_civil": "CASADO(A)", "naturalidade": "POCONE", "sexo": "M", "bairro": "JARDIM PAULISTA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010038", "situacao": "A", "salbase": 3500.0, "idade": 58, "ano_adm": 2021}, {"nome": "RICARDO STARKE NETO", "dt_nascto": "05/12/1975", "estado_civil": "CASADO(A)", "naturalidade": "GUAÍRA", "sexo": "M", "bairro": "JARDIM MONTE LIBANO", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010039", "situacao": "A", "salbase": 3500.0, "idade": 50, "ano_adm": 2021}, {"nome": "JOSIMAR CARVALHO DE ANDRADE", "dt_nascto": "13/05/1977", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "RES MILTON FIGUEREDO", "cidade": "VARZEA GRANDE", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010041", "situacao": "A", "salbase": 3500.0, "idade": 48, "ano_adm": 2021}, {"nome": "JOSE RAMOS DOS SANTOS", "dt_nascto": "24/01/1974", "estado_civil": "CASADO(A)", "naturalidade": "SALTO DO CEU", "sexo": "M", "bairro": "JOAO BOSCO PINHEIRO", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010042", "situacao": "A", "salbase": 3500.0, "idade": 52, "ano_adm": 2021}, {"nome": "ODNILO NEVES DA PAZ", "dt_nascto": "25/07/1974", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "DR FABIO II", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010043", "situacao": "A", "salbase": 3500.0, "idade": 51, "ano_adm": 2021}, {"nome": "CARLOS VICENTE DA SILVA", "dt_nascto": "25/07/1971", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "JARDIM VITORIA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010044", "situacao": "A", "salbase": 3500.0, "idade": 54, "ano_adm": 2021}, {"nome": "VALDEIR DA SILVA FERNANDES", "dt_nascto": "09/10/1965", "estado_civil": "CASADO(A)", "naturalidade": "PRESIDENTE MEDICI", "sexo": "M", "bairro": "JARDIM PRIMEIRO DE M", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010045", "situacao": "A", "salbase": 3500.0, "idade": 60, "ano_adm": 2021}, {"nome": "EDGAR DA MATA SILVA", "dt_nascto": "11/05/1971", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "SANTA IZABEL", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010047", "situacao": "A", "salbase": 3500.0, "idade": 54, "ano_adm": 2021}, {"nome": "OSWALDO REIS GONCALVES", "dt_nascto": "06/01/1970", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "NOVO MILENIO", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010048", "situacao": "A", "salbase": 3500.0, "idade": 56, "ano_adm": 2021}, {"nome": "RAFAEL DE ABREU E SILVA", "dt_nascto": "07/05/1989", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "PLANALTO", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010049", "situacao": "A", "salbase": 3500.0, "idade": 36, "ano_adm": 2021}, {"nome": "VIMIVALDO BATISTA DO NASCIMENTO", "dt_nascto": "24/08/1970", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010050", "situacao": "A", "salbase": 3500.0, "idade": 55, "ano_adm": 2021}, {"nome": "RAFAEL COSTA SOUSA", "dt_nascto": "28/11/1985", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "RESIDENCIAL ARICA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010051", "situacao": "A", "salbase": 3500.0, "idade": 40, "ano_adm": 2021}, {"nome": "VALDEIR FRANCISCO PIMENTA", "dt_nascto": "24/01/1972", "estado_civil": "CASADO(A)", "naturalidade": "BELO HORIZONTE", "sexo": "M", "bairro": "CPA 2", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010052", "situacao": "A", "salbase": 3500.0, "idade": 54, "ano_adm": 2021}, {"nome": "MARCOS AURELIO LEITE DA COSTA", "dt_nascto": "18/05/1982", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "JARDIM FLORIANOPOLIS", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010053", "situacao": "A", "salbase": 3500.0, "idade": 43, "ano_adm": 2021}, {"nome": "WANDIRNEY FRANCISCO DA SILVA NASCIMENTO", "dt_nascto": "09/11/1977", "estado_civil": "CASADO(A)", "naturalidade": "CHAPADA DOS GUIMARAE", "sexo": "M", "bairro": "BELA VISTA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010054", "situacao": "A", "salbase": 3500.0, "idade": 48, "ano_adm": 2021}, {"nome": "ALESIO ALVES PEREIRA", "dt_nascto": "10/10/1973", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "SANTA IZABEL", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010055", "situacao": "A", "salbase": 3500.0, "idade": 52, "ano_adm": 2021}, {"nome": "ANTONIO FILHO SOUZA LUZ", "dt_nascto": "20/11/1982", "estado_civil": "CASADO(A)", "naturalidade": "DOM AQUINO", "sexo": "M", "bairro": "CPA IV", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010056", "situacao": "A", "salbase": 3500.0, "idade": 43, "ano_adm": 2021}, {"nome": "PAULO ANTONIO SANTOS RODRIGUES", "dt_nascto": "04/12/1985", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "SANTA TEREZINHA 1", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010057", "situacao": "A", "salbase": 3500.0, "idade": 40, "ano_adm": 2021}, {"nome": "ERIVALDO TOMAZ DE LARA", "dt_nascto": "04/03/1987", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "JARDIM BRASIL", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010061", "situacao": "A", "salbase": 3500.0, "idade": 39, "ano_adm": 2021}, {"nome": "SIDIRLEY PEREIRA GOMES", "dt_nascto": "02/01/1979", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "JARDIM VITORIA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010065", "situacao": "A", "salbase": 3500.0, "idade": 47, "ano_adm": 2021}, {"nome": "PAULO EUGENIO LOPES DA SILVA", "dt_nascto": "13/07/1967", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CPA 3", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010066", "situacao": "A", "salbase": 3500.0, "idade": 58, "ano_adm": 2021}, {"nome": "AURINO RODRIGUES CHAVES", "dt_nascto": "04/06/1967", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "NOVO PARAISO 1", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010067", "situacao": "A", "salbase": 3500.0, "idade": 58, "ano_adm": 2021}, {"nome": "RAILDO JUNIOR DA COSTA", "dt_nascto": "16/05/1983", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "RESIDENCIAL ITAPAJE", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010068", "situacao": "A", "salbase": 3500.0, "idade": 42, "ano_adm": 2021}, {"nome": "ROBERTO FELIX GONCALVES", "dt_nascto": "17/04/1979", "estado_civil": "CASADO(A)", "naturalidade": "RONDONOPOLIS", "sexo": "M", "bairro": "JARDIM MARINGA", "cidade": "VARZEA GRANDE", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010069", "situacao": "A", "salbase": 3500.0, "idade": 47, "ano_adm": 2021}, {"nome": "TANDALO VOLNES DE ARAUJO", "dt_nascto": "12/09/1976", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "PONTE NOVA", "cidade": "VARZEA GRANDE", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010070", "situacao": "A", "salbase": 3500.0, "idade": 49, "ano_adm": 2021}, {"nome": "NICANOR MARTINS QUELIM", "dt_nascto": "04/08/1974", "estado_civil": "CASADO(A)", "naturalidade": "PARAGUAÇU PAULISTA", "sexo": "M", "bairro": "JARDIM FLORIANOPOLIS", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010072", "situacao": "A", "salbase": 3500.0, "idade": 51, "ano_adm": 2021}, {"nome": "EDJAIMES RAMOS NASCIMENTO", "dt_nascto": "24/09/1976", "estado_civil": "CASADO(A)", "naturalidade": "JAURU", "sexo": "M", "bairro": "JARDIM OURO FINO", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010073", "situacao": "A", "salbase": 3500.0, "idade": 49, "ano_adm": 2021}, {"nome": "JOAO FRANCISCO FERREIRA FILHO", "dt_nascto": "04/10/1976", "estado_civil": "CASADO(A)", "naturalidade": "CHAPADA DOS GUIMARAE", "sexo": "M", "bairro": "ALTOS DA GLORIA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010075", "situacao": "A", "salbase": 3500.0, "idade": 49, "ano_adm": 2021}, {"nome": "MANOEL FERREIRA LIMA", "dt_nascto": "29/08/1965", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "JARDIM VITORIA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010078", "situacao": "A", "salbase": 3500.0, "idade": 60, "ano_adm": 2021}, {"nome": "DEGENAIR DOS REIS TEIXEIRA", "dt_nascto": "26/03/1985", "estado_civil": "SOLTEIRO(A)", "naturalidade": "SAO LUIS DE MONTES B", "sexo": "M", "bairro": "JARDIM MONTE LIBANO", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010082", "situacao": "A", "salbase": 3500.0, "idade": 41, "ano_adm": 2021}, {"nome": "FAGNER RODRIGUES DE JESUS", "dt_nascto": "28/12/1990", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CPA 03 SETOR 05", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010083", "situacao": "A", "salbase": 3500.0, "idade": 35, "ano_adm": 2021}, {"nome": "LUIS CARLOS COSTA DE JESUS", "dt_nascto": "01/07/1984", "estado_civil": "CASADO(A)", "naturalidade": "SALVADOR", "sexo": "M", "bairro": "PARQUE DAS NAÇÕES", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010084", "situacao": "A", "salbase": 3500.0, "idade": 41, "ano_adm": 2021}, {"nome": "DAMIAO NUNES DA SILVA", "dt_nascto": "23/02/1973", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "RES COXIPO DA PONTE", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010086", "situacao": "A", "salbase": 3500.0, "idade": 53, "ano_adm": 2021}, {"nome": "LUIZ FERNANDO RODRIGUES DE ASSIS", "dt_nascto": "02/07/1993", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "RES JONAS PINHEIRO", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010089", "situacao": "A", "salbase": 3500.0, "idade": 32, "ano_adm": 2021}, {"nome": "CARLOS MANOEL RODRIGUES", "dt_nascto": "06/12/1980", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "ALTOS DA SERRA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010095", "situacao": "A", "salbase": 3500.0, "idade": 45, "ano_adm": 2021}, {"nome": "BENEDITO DE FIGUEIREDO", "dt_nascto": "18/12/1968", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "JARDIM NOVO HORIZONT", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010097", "situacao": "A", "salbase": 3500.0, "idade": 57, "ano_adm": 2021}, {"nome": "BENEDITO CEZAR CORREA DE ARRUDA", "dt_nascto": "08/03/1973", "estado_civil": "CASADO(A)", "naturalidade": "POCONE", "sexo": "M", "bairro": "SAO JOAO DEL REY", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010098", "situacao": "A", "salbase": 3500.0, "idade": 53, "ano_adm": 2021}, {"nome": "RICARDO CAMPOS DE MORAES", "dt_nascto": "17/11/1970", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CANJICA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010099", "situacao": "A", "salbase": 3500.0, "idade": 55, "ano_adm": 2021}, {"nome": "ROGERIO SILVARES REIS", "dt_nascto": "01/07/1977", "estado_civil": "CASADO(A)", "naturalidade": "JACIARA", "sexo": "M", "bairro": "JARDIM VITORIA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010100", "situacao": "A", "salbase": 3500.0, "idade": 48, "ano_adm": 2021}, {"nome": "REGINALDO DE PAULA CORREA", "dt_nascto": "07/09/1959", "estado_civil": "CASADO(A)", "naturalidade": "ROSARIO OESTE", "sexo": "M", "bairro": "CPA 4", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010101", "situacao": "A", "salbase": 3500.0, "idade": 66, "ano_adm": 2021}, {"nome": "PEDRO PINTO SAMPAIO", "dt_nascto": "29/06/1975", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CPA IV", "cidade": "CUIABA", "uf": "MT", "funcao": "MOT INSTRUTOR", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010102", "situacao": "A", "salbase": 3500.0, "idade": 50, "ano_adm": 2021}, {"nome": "ROBERTO CANDELARIO DE SOUZA FILHO", "dt_nascto": "02/09/1980", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "JARDIM INDEPENDENCIA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010103", "situacao": "A", "salbase": 3500.0, "idade": 45, "ano_adm": 2021}, {"nome": "ANTONIO MARCOS CRUZ LEMES", "dt_nascto": "06/07/1978", "estado_civil": "CASADO(A)", "naturalidade": "CACERES", "sexo": "M", "bairro": "JARDIM VITORIA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010104", "situacao": "A", "salbase": 3500.0, "idade": 47, "ano_adm": 2021}, {"nome": "CARLOS PEREIRA LEITE", "dt_nascto": "20/11/1973", "estado_civil": "CASADO(A)", "naturalidade": "POCONE", "sexo": "M", "bairro": "JARDIM DOS PINHEIROS", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010105", "situacao": "A", "salbase": 3500.0, "idade": 52, "ano_adm": 2021}, {"nome": "GABRIEL GOMES NOGUEIRA", "dt_nascto": "17/01/1983", "estado_civil": "SOLTEIRO(A)", "naturalidade": "SANTANA DO ARAGUAIA", "sexo": "M", "bairro": "TIJUCAL", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010109", "situacao": "A", "salbase": 3500.0, "idade": 43, "ano_adm": 2021}, {"nome": "ANTONIO DA SILVA ALMEIDA", "dt_nascto": "27/04/1974", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "TIJUCAL", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010110", "situacao": "A", "salbase": 3500.0, "idade": 52, "ano_adm": 2021}, {"nome": "ADEMILSON MARTINS DE FRANCA SILVA", "dt_nascto": "19/01/1976", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "SERRA DOURADA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010112", "situacao": "A", "salbase": 3500.0, "idade": 50, "ano_adm": 2021}, {"nome": "PAULO PEREIRA DOS SANTOS", "dt_nascto": "30/08/1975", "estado_civil": "CASADO(A)", "naturalidade": "NOVA BRASILANDIA", "sexo": "M", "bairro": "CPA 3", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010114", "situacao": "A", "salbase": 3500.0, "idade": 50, "ano_adm": 2021}, {"nome": "ARMANDO VIEIRA FERNANDES", "dt_nascto": "02/11/1975", "estado_civil": "CASADO(A)", "naturalidade": "ALTO PIQUIRI", "sexo": "M", "bairro": "JARDIM VITORIA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010115", "situacao": "A", "salbase": 3500.0, "idade": 50, "ano_adm": 2021}, {"nome": "JOAMIL SOARES DE CAMPOS", "dt_nascto": "10/10/1972", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "RIBEIRAO DO LIPA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010116", "situacao": "A", "salbase": 3500.0, "idade": 53, "ano_adm": 2021}, {"nome": "ADAWILSON APARECIDO DA SILVA", "dt_nascto": "19/09/1978", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "DOM ORLANDO CHAVES", "cidade": "VARZEA GRANDE", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010117", "situacao": "A", "salbase": 3500.0, "idade": 47, "ano_adm": 2021}, {"nome": "IVON SOARES PEREIRA", "dt_nascto": "05/06/1977", "estado_civil": "CASADO(A)", "naturalidade": "DOM AQUINO", "sexo": "M", "bairro": "CARUMBE", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010118", "situacao": "A", "salbase": 3500.0, "idade": 48, "ano_adm": 2021}, {"nome": "JARDES LOURENCO DA SILVA", "dt_nascto": "18/05/1968", "estado_civil": "CASADO(A)", "naturalidade": "CACERES", "sexo": "M", "bairro": "CPA I", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010119", "situacao": "A", "salbase": 3500.0, "idade": 57, "ano_adm": 2021}, {"nome": "VALDETINO NUNES DE LIMA", "dt_nascto": "07/07/1970", "estado_civil": "CASADO(A)", "naturalidade": "POXOREU", "sexo": "M", "bairro": "RES CELESTINI PINHEI", "cidade": "VARZEA GRANDE", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010122", "situacao": "A", "salbase": 3500.0, "idade": 55, "ano_adm": 2021}, {"nome": "GLAUCO DOS SANTOS", "dt_nascto": "29/05/1983", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "MORADA DA SERRA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010125", "situacao": "A", "salbase": 3500.0, "idade": 42, "ano_adm": 2021}, {"nome": "EDELSON SILVA PEREIRA", "dt_nascto": "10/02/1985", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CPA I", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010126", "situacao": "A", "salbase": 3500.0, "idade": 41, "ano_adm": 2021}, {"nome": "LUIS MARIO CORREA DOS SANTOS", "dt_nascto": "08/02/1972", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "DR FABIO", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010127", "situacao": "A", "salbase": 3500.0, "idade": 54, "ano_adm": 2021}, {"nome": "DEUSDETE ORMOND ROSA JUNIOR", "dt_nascto": "23/02/1986", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "JARDIM VITARIA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010128", "situacao": "A", "salbase": 3500.0, "idade": 40, "ano_adm": 2021}, {"nome": "IRINEU ALVES DE LARA", "dt_nascto": "03/07/1967", "estado_civil": "", "naturalidade": "BRASILEIRA", "sexo": "M", "bairro": "JARDIM FLORIANOPOLIS", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010129", "situacao": "A", "salbase": 3500.0, "idade": 58, "ano_adm": 2021}, {"nome": "RILDER ESTEVAO MORAES VIANA", "dt_nascto": "16/08/1980", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CPA IV", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010130", "situacao": "A", "salbase": 3500.0, "idade": 45, "ano_adm": 2021}, {"nome": "JOSE PAULO NASCIMENTO DE MORAES", "dt_nascto": "31/05/1974", "estado_civil": "CASADO(A)", "naturalidade": "GUIRATINGA", "sexo": "M", "bairro": "JARDIM VITORIA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010132", "situacao": "A", "salbase": 3500.0, "idade": 51, "ano_adm": 2021}, {"nome": "EDSON TEIXEIRA DOS SANTOS", "dt_nascto": "03/02/1985", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "SANTATEREZA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010134", "situacao": "A", "salbase": 3500.0, "idade": 41, "ano_adm": 2021}, {"nome": "FLAVIANO ALVARENGA ALVES FERREIRA", "dt_nascto": "13/06/1983", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CARUMBE", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010137", "situacao": "A", "salbase": 3500.0, "idade": 42, "ano_adm": 2021}, {"nome": "OSVALDO OLIVIO DE CARVALHO FILHO", "dt_nascto": "24/04/1978", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "JARDIM FLORIANOPOLIS", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010144", "situacao": "A", "salbase": 3500.0, "idade": 48, "ano_adm": 2021}, {"nome": "WASHINGTON SANTOS DA SILVA", "dt_nascto": "24/07/1984", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "ALTOS DA SERRA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010145", "situacao": "A", "salbase": 3500.0, "idade": 41, "ano_adm": 2021}, {"nome": "JOSE ROBERTO MIRANDA MARTINS", "dt_nascto": "27/03/1993", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "POCAO", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010146", "situacao": "A", "salbase": 3500.0, "idade": 33, "ano_adm": 2021}, {"nome": "JUAREZ MARQUES VIANA", "dt_nascto": "25/04/1979", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "JARDIM CANAA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010149", "situacao": "A", "salbase": 3500.0, "idade": 47, "ano_adm": 2021}, {"nome": "RODOLFO GONCALVES MARTINS DE SIQUEIRA", "dt_nascto": "12/02/1985", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "DOM AQUINO", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010154", "situacao": "A", "salbase": 3500.0, "idade": 41, "ano_adm": 2021}, {"nome": "JOAO ADRIANO BATISTA", "dt_nascto": "28/05/1979", "estado_civil": "SOLTEIRO(A)", "naturalidade": "COLIDER", "sexo": "M", "bairro": "JD NOVA FRONTEIRA", "cidade": "VARZEA GRANDE", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010155", "situacao": "A", "salbase": 3500.0, "idade": 46, "ano_adm": 2021}, {"nome": "CLAUDINEY GONZAGA DO NASCIMENTO", "dt_nascto": "25/11/1982", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "TRES BARRAS", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010156", "situacao": "A", "salbase": 3500.0, "idade": 43, "ano_adm": 2021}, {"nome": "FABIO PEREIRA DA COSTA", "dt_nascto": "25/07/1984", "estado_civil": "SOLTEIRO(A)", "naturalidade": "SAO JOAO EVANGELISTA", "sexo": "M", "bairro": "NOVA CANAA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010157", "situacao": "A", "salbase": 3500.0, "idade": 41, "ano_adm": 2021}, {"nome": "DEZINHO GONCALO DE AMORIM MOURA", "dt_nascto": "09/01/1979", "estado_civil": "CASADO(A)", "naturalidade": "BARÃO DE MELGAÇO", "sexo": "M", "bairro": "JD DAS AROEIRAS", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010158", "situacao": "A", "salbase": 3500.0, "idade": 47, "ano_adm": 2021}, {"nome": "JOAO PAULO DO NASCIMENTO LIMA", "dt_nascto": "22/11/1985", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "PASCOAL RAMOS", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010160", "situacao": "A", "salbase": 3500.0, "idade": 40, "ano_adm": 2021}, {"nome": "ANTONIO CARLOS ALENCASTRO DE AMORIM", "dt_nascto": "30/01/1979", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "DOM AQUINO", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010161", "situacao": "A", "salbase": 3500.0, "idade": 47, "ano_adm": 2021}, {"nome": "EDEMAR DA SILVA FRANCA", "dt_nascto": "26/09/1982", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "PASCOAL RAMOS", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010164", "situacao": "A", "salbase": 3500.0, "idade": 43, "ano_adm": 2021}, {"nome": "HERON PAIVA DA SILVA", "dt_nascto": "12/03/1983", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "RES STA TEREZINHA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010169", "situacao": "A", "salbase": 3500.0, "idade": 43, "ano_adm": 2021}, {"nome": "JOSE FREDERICO DA SILVA", "dt_nascto": "04/12/1975", "estado_civil": "CASADO(A)", "naturalidade": "CHAPADA DOS GUIMARAE", "sexo": "M", "bairro": "JD PRIMEIRO DE MARCO", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010170", "situacao": "A", "salbase": 3500.0, "idade": 50, "ano_adm": 2021}, {"nome": "VOLMIR DE LIMA", "dt_nascto": "18/08/1965", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CPA IV", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010173", "situacao": "A", "salbase": 3500.0, "idade": 60, "ano_adm": 2021}, {"nome": "MARLON HENRIQUE BARBOSA SOUZA", "dt_nascto": "30/01/1995", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "JARDIM UMUARAMA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010175", "situacao": "A", "salbase": 3500.0, "idade": 31, "ano_adm": 2021}, {"nome": "CESAR AUGUSTO DIAS DA SILVA", "dt_nascto": "30/07/1974", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CPA IV", "cidade": "CUIABA", "uf": "MT", "funcao": "GER OPER JUNIOR", "salario": 5694.55, "dt_adm": "03/08/2021", "matricula": "010176", "situacao": "A", "salbase": 5694.55, "idade": 51, "ano_adm": 2021}, {"nome": "EDIVALDO RIBEIRO DA GAMA", "dt_nascto": "14/04/1986", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "BELA VISTA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010177", "situacao": "A", "salbase": 3500.0, "idade": 40, "ano_adm": 2021}, {"nome": "JOSE BONFIM DA SILVA", "dt_nascto": "02/08/1957", "estado_civil": "CASADO(A)", "naturalidade": "SANTANA DO ARAGUAIA", "sexo": "M", "bairro": "JARDIM VITORIA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010178", "situacao": "A", "salbase": 3500.0, "idade": 68, "ano_adm": 2021}, {"nome": "ARMINDO FRANCISCO DA SILVA", "dt_nascto": "05/09/1975", "estado_civil": "CASADO(A)", "naturalidade": "SANTO ANTONIO DO LEV", "sexo": "M", "bairro": "DR FABIO 2", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/08/2021", "matricula": "010179", "situacao": "A", "salbase": 3500.0, "idade": 50, "ano_adm": 2021}, {"nome": "ODIMAR BENEDITO DE PAULA", "dt_nascto": "19/01/1968", "estado_civil": "SOLTEIRO(A)", "naturalidade": "VARZEA GRANDE", "sexo": "M", "bairro": "COXIPO DA PONTE", "cidade": "CUIABA", "uf": "MT", "funcao": "AUX. TRAFEGO A3", "salario": 3033.72, "dt_adm": "04/08/2021", "matricula": "010184", "situacao": "A", "salbase": 3033.72, "idade": 58, "ano_adm": 2021}, {"nome": "RODRIGO MARINHO FERREIRA DA SILVA", "dt_nascto": "05/03/1985", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "JARDIM ESTORIL", "cidade": "SANTO ANTONIO DO LEV", "uf": "MT", "funcao": "AUX.TRAFEGO A2", "salario": 2813.78, "dt_adm": "05/08/2021", "matricula": "010187", "situacao": "A", "salbase": 2813.78, "idade": 41, "ano_adm": 2021}, {"nome": "EMERSON LOPES DA SILVA", "dt_nascto": "01/04/1976", "estado_civil": "SOLTEIRO(A)", "naturalidade": "RONDONOPOLIS", "sexo": "M", "bairro": "JARDIM IMPERIAL", "cidade": "CUIABA", "uf": "MT", "funcao": "ADMINISTRADOR", "salario": 5784.8, "dt_adm": "16/08/2021", "matricula": "010188", "situacao": "A", "salbase": 5784.8, "idade": 50, "ano_adm": 2021}, {"nome": "JOAO VALDENIR DONATO", "dt_nascto": "12/11/1980", "estado_civil": "", "naturalidade": "M SAMAMBAIA", "sexo": "M", "bairro": "MAPIM", "cidade": "VARZEA GRANDE", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "23/08/2021", "matricula": "010189", "situacao": "A", "salbase": 3500.0, "idade": 45, "ano_adm": 2021}, {"nome": "FERNANDO BENEDITO DA COSTA SIQUEIRA", "dt_nascto": "09/03/1984", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "RECANTO DOS PASSAROS", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "23/08/2021", "matricula": "010190", "situacao": "A", "salbase": 3500.0, "idade": 42, "ano_adm": 2021}, {"nome": "NILTON CARLOS DE OLIVEIRA", "dt_nascto": "07/12/1970", "estado_civil": "", "naturalidade": "M C", "sexo": "M", "bairro": "RESIDENCIAL COXIPO", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "21/08/2021", "matricula": "010193", "situacao": "A", "salbase": 3500.0, "idade": 55, "ano_adm": 2021}, {"nome": "JOAO DOS REIS CUNHA", "dt_nascto": "24/10/1963", "estado_civil": "", "naturalidade": "M 12", "sexo": "M", "bairro": "PAQ RES COXIPO", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "21/08/2021", "matricula": "010194", "situacao": "A", "salbase": 3500.0, "idade": 62, "ano_adm": 2021}, {"nome": "ALEX FABIAN SOUZA MACHADO", "dt_nascto": "21/07/1979", "estado_civil": "", "naturalidade": "M 06", "sexo": "M", "bairro": "PARQUE", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "21/08/2021", "matricula": "010195", "situacao": "A", "salbase": 3500.0, "idade": 46, "ano_adm": 2021}, {"nome": "ANDRESON DE ALMEIDA", "dt_nascto": "17/03/1978", "estado_civil": "", "naturalidade": "M ROD DEPUTADO EMANUEL PINHEIRO", "sexo": "M", "bairro": "JARDIM VITORIA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "21/08/2021", "matricula": "010196", "situacao": "A", "salbase": 3500.0, "idade": 48, "ano_adm": 2021}, {"nome": "RICARDO DUARTE NEVES", "dt_nascto": "21/03/1977", "estado_civil": "", "naturalidade": "BRASILEIRA", "sexo": "M", "bairro": "RESIDENCIAL COXIPO", "cidade": "CUIABA", "uf": "MT", "funcao": "AG DE PORTARIA A", "salario": 2813.78, "dt_adm": "01/09/2021", "matricula": "010202", "situacao": "A", "salbase": 2813.78, "idade": 49, "ano_adm": 2021}, {"nome": "NATALINO RODRIGUES PEREIRA", "dt_nascto": "24/12/1986", "estado_civil": "CASADO(A)", "naturalidade": "SOBRAL", "sexo": "M", "bairro": "NOVO MATO GROSSO", "cidade": "VARZEA GRANDE", "uf": "MT", "funcao": "COOR CTD MANT JR", "salario": 2773.53, "dt_adm": "01/09/2021", "matricula": "010203", "situacao": "A", "salbase": 2773.53, "idade": 39, "ano_adm": 2021}, {"nome": "FRANCISCO DE OLIVEIRA E SILVA NETO", "dt_nascto": "29/11/1980", "estado_civil": "", "naturalidade": "M TREZE DE JUNHO", "sexo": "M", "bairro": "CENTRO SUL", "cidade": "CUIABA", "uf": "MT", "funcao": "TEC SEG TRAB C", "salario": 1698.15, "dt_adm": "01/09/2021", "matricula": "010204", "situacao": "A", "salbase": 1698.15, "idade": 45, "ano_adm": 2021}, {"nome": "JOELSON OLIVEIRA DE SIQUEIRA", "dt_nascto": "13/09/1972", "estado_civil": "", "naturalidade": "BRASILEIRA", "sexo": "M", "bairro": "CPA II", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "01/02/2022", "matricula": "010207", "situacao": "A", "salbase": 3500.0, "idade": 53, "ano_adm": 2022}, {"nome": "VAIR SOARES DA SILVA", "dt_nascto": "13/01/1975", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "COHAB ASA BELA", "cidade": "VARZEA GRANDE", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "01/02/2022", "matricula": "010208", "situacao": "A", "salbase": 3500.0, "idade": 51, "ano_adm": 2022}, {"nome": "JAIRO RIBEIRO PEREIRA", "dt_nascto": "09/05/1984", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CPA 4", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "01/02/2022", "matricula": "010210", "situacao": "A", "salbase": 3500.0, "idade": 41, "ano_adm": 2022}, {"nome": "YASMIM ALVES FARIAS", "dt_nascto": "24/04/2000", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "F", "bairro": "TIJUCAL", "cidade": "CUIABA", "uf": "MT", "funcao": "ANALISTA GFO JUN", "salario": 2240.65, "dt_adm": "01/04/2022", "matricula": "010221", "situacao": "A", "salbase": 2240.65, "idade": 26, "ano_adm": 2022}, {"nome": "GEDSON DA SILVA ALVES ROSA", "dt_nascto": "13/10/1974", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "RIBEIRAO DO LIPA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "25/04/2022", "matricula": "010222", "situacao": "A", "salbase": 3500.0, "idade": 51, "ano_adm": 2022}, {"nome": "LAURINALDO FERREIRA DE ASSIS JUNIOR", "dt_nascto": "30/06/1993", "estado_civil": "", "naturalidade": "BRASILEIRA", "sexo": "M", "bairro": "CS AO LADO DA UC", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "25/04/2022", "matricula": "010223", "situacao": "A", "salbase": 3500.0, "idade": 32, "ano_adm": 2022}, {"nome": "CICERO FRANCISCO DA SILVA", "dt_nascto": "02/06/1976", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "DT N SRA DA GUIA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "25/04/2022", "matricula": "010224", "situacao": "A", "salbase": 3500.0, "idade": 49, "ano_adm": 2022}, {"nome": "LINDOMAR PEREIRA PRADO", "dt_nascto": "29/04/1975", "estado_civil": "CASADO(A)", "naturalidade": "JACIARA", "sexo": "M", "bairro": "PARQUE DO LAGO", "cidade": "VARZEA GRANDE", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "25/04/2022", "matricula": "010225", "situacao": "A", "salbase": 3500.0, "idade": 51, "ano_adm": 2022}, {"nome": "TITO FERREIRA DA SILVA NETO", "dt_nascto": "27/04/1975", "estado_civil": "CASADO(A)", "naturalidade": "VARZEA GRANDE", "sexo": "M", "bairro": "CENTRO SUL", "cidade": "VARZEA GRANDE", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "25/04/2022", "matricula": "010226", "situacao": "A", "salbase": 3500.0, "idade": 51, "ano_adm": 2022}, {"nome": "DEBORAH GOMES DA SILVA", "dt_nascto": "27/06/1977", "estado_civil": "CASADO(A)", "naturalidade": "FIRMINOPOLIS", "sexo": "F", "bairro": "RECANTO DOS PASSAROS", "cidade": "CUIABA", "uf": "MT", "funcao": "ANALIST DP SENIO", "salario": 4287.66, "dt_adm": "17/05/2022", "matricula": "010229", "situacao": "A", "salbase": 4287.66, "idade": 48, "ano_adm": 2022}, {"nome": "GERALDO SILVA DE SOUZA", "dt_nascto": "05/04/1984", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "ALTOS DA SERRA", "cidade": "CUIABA", "uf": "MT", "funcao": "AUX.TRAFEGO A2", "salario": 2813.78, "dt_adm": "01/06/2022", "matricula": "010230", "situacao": "A", "salbase": 2813.78, "idade": 42, "ano_adm": 2022}, {"nome": "HUGO ROQUE DOS SANTOS", "dt_nascto": "18/10/1995", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "JARDIM IMPERIAL", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "01/06/2022", "matricula": "010233", "situacao": "A", "salbase": 3500.0, "idade": 30, "ano_adm": 2022}, {"nome": "EDMILSON DE SOUZA PEDRO", "dt_nascto": "13/09/1982", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "08/06/2022", "matricula": "010235", "situacao": "A", "salbase": 3500.0, "idade": 43, "ano_adm": 2022}, {"nome": "EDUARDO MARTINS DIAS", "dt_nascto": "08/10/1993", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "TIJUCAL", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "08/06/2022", "matricula": "010237", "situacao": "A", "salbase": 3500.0, "idade": 32, "ano_adm": 2022}, {"nome": "ELSON BENEDITO DA COSTA", "dt_nascto": "11/06/1974", "estado_civil": "SOLTEIRO(A)", "naturalidade": "SANTO ANTONIO DO LEV", "sexo": "M", "bairro": "DOM AQUINO", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "01/07/2022", "matricula": "010241", "situacao": "A", "salbase": 3500.0, "idade": 51, "ano_adm": 2022}, {"nome": "ADRIEL BEVILACQUA", "dt_nascto": "25/10/1982", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CARUMBE", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "24/08/2022", "matricula": "010249", "situacao": "A", "salbase": 3500.0, "idade": 43, "ano_adm": 2022}, {"nome": "MARCIO DE ARAUJO SILVA", "dt_nascto": "30/11/1975", "estado_civil": "", "naturalidade": "BRASILEIRA", "sexo": "M", "bairro": "VARZEA GRANDE", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "24/08/2022", "matricula": "010250", "situacao": "A", "salbase": 3500.0, "idade": 50, "ano_adm": 2022}, {"nome": "LUIS DA SILVA PINHEIRO", "dt_nascto": "04/06/1979", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "24/08/2022", "matricula": "010251", "situacao": "A", "salbase": 3500.0, "idade": 46, "ano_adm": 2022}, {"nome": "TIAGO RODRIGO RODRIGUES", "dt_nascto": "03/05/1982", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "29/08/2022", "matricula": "010252", "situacao": "A", "salbase": 3500.0, "idade": 43, "ano_adm": 2022}, {"nome": "PAULO FRANCISCO ALCANTARA", "dt_nascto": "20/03/1987", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "29/08/2022", "matricula": "010254", "situacao": "A", "salbase": 3500.0, "idade": 39, "ano_adm": 2022}, {"nome": "BENEDITO MARCOS LAERTE DO NASCIMENTO", "dt_nascto": "21/11/1970", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "JARDIM LEBLON", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "29/08/2022", "matricula": "010255", "situacao": "A", "salbase": 3500.0, "idade": 55, "ano_adm": 2022}, {"nome": "RODOLFO DE SOUZA LOTERIO", "dt_nascto": "21/03/1986", "estado_civil": "CASADO(A)", "naturalidade": "CEREJEIRAS", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "29/08/2022", "matricula": "010256", "situacao": "A", "salbase": 3500.0, "idade": 40, "ano_adm": 2022}, {"nome": "ELYANA LADISLAU DA SILVA", "dt_nascto": "16/08/1990", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "F", "bairro": "CPA 4 3 ETAPA", "cidade": "CUIABA", "uf": "MT", "funcao": "PROMOT DE VENDAS", "salario": 1807.36, "dt_adm": "02/09/2022", "matricula": "010258", "situacao": "A", "salbase": 1807.36, "idade": 35, "ano_adm": 2022}, {"nome": "TALITTA SUZANY ARAUJO E SILVA", "dt_nascto": "06/02/1989", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "F", "bairro": "JARDIM GLORIA II", "cidade": "VARZEA GRANDE", "uf": "MT", "funcao": "PROMOT DE VENDAS", "salario": 1807.36, "dt_adm": "02/09/2022", "matricula": "010262", "situacao": "A", "salbase": 1807.36, "idade": 37, "ano_adm": 2022}, {"nome": "THIAGO CESAR GUARIM MIRANDA", "dt_nascto": "22/07/1986", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "DESPRAIADO", "cidade": "CUIABA", "uf": "MT", "funcao": "PROMOT DE VENDAS", "salario": 1807.36, "dt_adm": "02/09/2022", "matricula": "010263", "situacao": "A", "salbase": 1807.36, "idade": 39, "ano_adm": 2022}, {"nome": "GEOVANI FRANCA SOARES", "dt_nascto": "17/01/1986", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "JARDIM ELDORADO", "cidade": "CUIABA", "uf": "MT", "funcao": "PROMOT DE VENDAS", "salario": 1807.36, "dt_adm": "02/09/2022", "matricula": "010264", "situacao": "A", "salbase": 1807.36, "idade": 40, "ano_adm": 2022}, {"nome": "LUCELY PEREIRA ROCHA", "dt_nascto": "22/04/1984", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "F", "bairro": "JARDIM BRASIL", "cidade": "CUIABA", "uf": "MT", "funcao": "PROMOT DE VENDAS", "salario": 1807.36, "dt_adm": "02/09/2022", "matricula": "010265", "situacao": "A", "salbase": 1807.36, "idade": 42, "ano_adm": 2022}, {"nome": "MIRIAN SANTOS SILVA DE SOUZA", "dt_nascto": "04/04/1975", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "F", "bairro": "DR. FABIO", "cidade": "CUIABA", "uf": "MT", "funcao": "PROMOT DE VENDAS", "salario": 1807.36, "dt_adm": "02/09/2022", "matricula": "010266", "situacao": "A", "salbase": 1807.36, "idade": 51, "ano_adm": 2022}, {"nome": "NILCE SOSTENE DA SILVA", "dt_nascto": "28/11/1973", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "F", "bairro": "RIBEIRAO DO LIPA", "cidade": "CUIABA", "uf": "MT", "funcao": "PROMOT DE VENDAS", "salario": 1807.36, "dt_adm": "02/09/2022", "matricula": "010267", "situacao": "A", "salbase": 1807.36, "idade": 52, "ano_adm": 2022}, {"nome": "MICHELY SILVA SOUZA", "dt_nascto": "08/05/1989", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "F", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "06/09/2022", "matricula": "010268", "situacao": "A", "salbase": 3500.0, "idade": 36, "ano_adm": 2022}, {"nome": "JONATHAN JUNIOR LISBOA", "dt_nascto": "20/10/1986", "estado_civil": "", "naturalidade": "M MASCARENHAS DE MORAES", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "06/09/2022", "matricula": "010271", "situacao": "A", "salbase": 3500.0, "idade": 39, "ano_adm": 2022}, {"nome": "DIEGO SOUZA REIS", "dt_nascto": "14/11/1994", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "PEDREGAL", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "06/09/2022", "matricula": "010275", "situacao": "A", "salbase": 3500.0, "idade": 31, "ano_adm": 2022}, {"nome": "MARCHEL RIBEIRO DE FREITAS", "dt_nascto": "09/05/1976", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "19/09/2022", "matricula": "010278", "situacao": "A", "salbase": 3500.0, "idade": 49, "ano_adm": 2022}, {"nome": "LAURINEY PINTO DO MONTE", "dt_nascto": "23/03/1983", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "19/09/2022", "matricula": "010279", "situacao": "A", "salbase": 3500.0, "idade": 43, "ano_adm": 2022}, {"nome": "WEBER EVANGELISTA DAMACENA", "dt_nascto": "19/02/1979", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA VANS", "salario": 2465.4, "dt_adm": "26/09/2022", "matricula": "010280", "situacao": "A", "salbase": 2465.4, "idade": 47, "ano_adm": 2022}, {"nome": "MARCOS MAXIMO RODRIGUES", "dt_nascto": "20/01/1976", "estado_civil": "CASADO(A)", "naturalidade": "NORTELANDIA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "19/10/2022", "matricula": "010285", "situacao": "A", "salbase": 3500.0, "idade": 50, "ano_adm": 2022}, {"nome": "GILDO MARQUES DA ROCHA", "dt_nascto": "20/04/1973", "estado_civil": "", "naturalidade": "M 36", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "02/02/2023", "matricula": "010288", "situacao": "A", "salbase": 3500.0, "idade": 53, "ano_adm": 2023}, {"nome": "MANOEL MARIA DE ARAUJO", "dt_nascto": "16/01/1974", "estado_civil": "", "naturalidade": "BRASILEIRA", "sexo": "M", "bairro": "PEDRA 90", "cidade": "CUIABA", "uf": "MT", "funcao": "AG DE PORTARIA A", "salario": 2813.78, "dt_adm": "14/03/2023", "matricula": "010297", "situacao": "A", "salbase": 2813.78, "idade": 52, "ano_adm": 2023}, {"nome": "JORGE GUSTAVO RODRIGUES", "dt_nascto": "06/12/1976", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CAMPO GRANDE", "sexo": "M", "bairro": "VARZEA GRANDE", "cidade": "MT", "uf": "78", "funcao": "AUX.TRAFEGO A2", "salario": 2813.78, "dt_adm": "12/05/2023", "matricula": "010298", "situacao": "A", "salbase": 2813.78, "idade": 49, "ano_adm": 2023}, {"nome": "TATIANE CRISTINA DE ASSIS", "dt_nascto": "14/01/1988", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "F", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "AUX DE DP B", "salario": 2352.26, "dt_adm": "18/05/2023", "matricula": "010299", "situacao": "A", "salbase": 2352.26, "idade": 38, "ano_adm": 2023}, {"nome": "MARCOS DE FREITAS CAVALCANTE", "dt_nascto": "07/10/1967", "estado_civil": "CASADO(A)", "naturalidade": "PARANAIBA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA VANS", "salario": 2465.4, "dt_adm": "24/05/2023", "matricula": "010300", "situacao": "A", "salbase": 2465.4, "idade": 58, "ano_adm": 2023}, {"nome": "VALDEVINO FILHO PEREIRA", "dt_nascto": "19/11/1973", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "01/07/2023", "matricula": "010311", "situacao": "A", "salbase": 3500.0, "idade": 52, "ano_adm": 2023}, {"nome": "WELLIOSIL SOUZA DE OLIVEIRA", "dt_nascto": "23/01/1984", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "15/08/2023", "matricula": "010316", "situacao": "A", "salbase": 3500.0, "idade": 42, "ano_adm": 2023}, {"nome": "JOSE CARLOS SANTANA AIRES", "dt_nascto": "18/05/1976", "estado_civil": "", "naturalidade": "M COLOMBIA", "sexo": "M", "bairro": "SANTA ISABEL", "cidade": "VARZEA GRANDE", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "04/12/2023", "matricula": "010327", "situacao": "A", "salbase": 3500.0, "idade": 49, "ano_adm": 2023}, {"nome": "GUTEMBERG SOUZA FALCAO", "dt_nascto": "17/03/1992", "estado_civil": "", "naturalidade": "BRASILEIRA", "sexo": "M", "bairro": "VARZEA GRANDE", "cidade": "MT", "uf": "78", "funcao": "ANLT CTD MANT JR", "salario": 2978.79, "dt_adm": "01/02/2024", "matricula": "010328", "situacao": "A", "salbase": 2978.79, "idade": 34, "ano_adm": 2024}, {"nome": "ANTONIO ARCANJO", "dt_nascto": "14/01/1982", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "JARDIM ITAPUA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "05/02/2024", "matricula": "010330", "situacao": "A", "salbase": 3500.0, "idade": 44, "ano_adm": 2024}, {"nome": "VLADIMIR SANDRO SILVA FELIX", "dt_nascto": "04/05/1971", "estado_civil": "SOLTEIRO(A)", "naturalidade": "SAO PAULO", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "18/03/2024", "matricula": "010334", "situacao": "A", "salbase": 3500.0, "idade": 54, "ano_adm": 2024}, {"nome": "JAIR DE SOUZA SANTOS", "dt_nascto": "07/10/1979", "estado_civil": "CASADO(A)", "naturalidade": "CAMPO GRANDE", "sexo": "M", "bairro": "JARDIM AROEIRA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "01/04/2024", "matricula": "010336", "situacao": "A", "salbase": 3500.0, "idade": 46, "ano_adm": 2024}, {"nome": "CELSO DE MIRANDA FERREIRA", "dt_nascto": "29/04/1982", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "01/04/2024", "matricula": "010337", "situacao": "A", "salbase": 3500.0, "idade": 44, "ano_adm": 2024}, {"nome": "LUIZ WAGNER PEREIRA DOS SANTOS", "dt_nascto": "22/05/1985", "estado_civil": "", "naturalidade": "M 39", "sexo": "M", "bairro": "BELA VISTA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "15/04/2024", "matricula": "010339", "situacao": "A", "salbase": 3500.0, "idade": 40, "ano_adm": 2024}, {"nome": "JOANIL ANTONIO DA GUIA", "dt_nascto": "22/04/1983", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "15/04/2024", "matricula": "010340", "situacao": "A", "salbase": 3500.0, "idade": 43, "ano_adm": 2024}, {"nome": "ANDRE LUIZ DA SILVA", "dt_nascto": "20/07/1989", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "25/04/2024", "matricula": "010343", "situacao": "A", "salbase": 3500.0, "idade": 36, "ano_adm": 2024}, {"nome": "ALBERTO JUNIOR FRAGA NOGUEIRA", "dt_nascto": "13/01/1977", "estado_civil": "CASADO(A)", "naturalidade": "ALTO GARÇAS", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "25/04/2024", "matricula": "010344", "situacao": "A", "salbase": 3500.0, "idade": 49, "ano_adm": 2024}, {"nome": "MARCO ANTONIO DOS SANTOS BENEVIDES", "dt_nascto": "25/05/1986", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "DESPRAIADO", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "25/04/2024", "matricula": "010345", "situacao": "A", "salbase": 3500.0, "idade": 39, "ano_adm": 2024}, {"nome": "JUNIOR DOS SANTOS AMORIM", "dt_nascto": "04/10/1986", "estado_civil": "SOLTEIRO(A)", "naturalidade": "PORTO VELHO", "sexo": "M", "bairro": "CANJICA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA VANS", "salario": 2465.4, "dt_adm": "25/04/2024", "matricula": "010346", "situacao": "A", "salbase": 2465.4, "idade": 39, "ano_adm": 2024}, {"nome": "RENATO ERVIS ZEFERINO DA ROSA", "dt_nascto": "06/09/1984", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "13/05/2024", "matricula": "010348", "situacao": "A", "salbase": 3500.0, "idade": 41, "ano_adm": 2024}, {"nome": "RUBINEY CONCEICAO MAIA DA SILVA", "dt_nascto": "20/08/1976", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "13/05/2024", "matricula": "010349", "situacao": "A", "salbase": 3500.0, "idade": 49, "ano_adm": 2024}, {"nome": "CELIO MARCIO BARBOSA", "dt_nascto": "26/03/1979", "estado_civil": "SOLTEIRO(A)", "naturalidade": "RONDONOPOLIS", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "20/05/2024", "matricula": "010351", "situacao": "A", "salbase": 3500.0, "idade": 47, "ano_adm": 2024}, {"nome": "RENATO SOUZA GONCALVES", "dt_nascto": "11/02/1982", "estado_civil": "CASADO(A)", "naturalidade": "ARAGARÇAS", "sexo": "M", "bairro": "PARQUE NOVA ESPERANC", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "11/06/2024", "matricula": "010356", "situacao": "A", "salbase": 3500.0, "idade": 44, "ano_adm": 2024}, {"nome": "SERGIO EDUARDO PINHEIRO DA COSTA", "dt_nascto": "27/08/1979", "estado_civil": "SOLTEIRO(A)", "naturalidade": "SAO PAULO", "sexo": "M", "bairro": "CRISTO REI", "cidade": "VARZEA GRANDE", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "11/06/2024", "matricula": "010357", "situacao": "A", "salbase": 3500.0, "idade": 46, "ano_adm": 2024}, {"nome": "JOAO RUFINO NETO", "dt_nascto": "01/02/1982", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "19/06/2024", "matricula": "010358", "situacao": "A", "salbase": 3500.0, "idade": 44, "ano_adm": 2024}, {"nome": "LUCIANO SOUZA DE PAULA", "dt_nascto": "26/08/1981", "estado_civil": "", "naturalidade": "BRASILEIRA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "19/06/2024", "matricula": "010359", "situacao": "A", "salbase": 3500.0, "idade": 44, "ano_adm": 2024}, {"nome": "JOSE LUIS DE CAMPOS FILHO", "dt_nascto": "02/09/1986", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CPA III", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "19/06/2024", "matricula": "010360", "situacao": "A", "salbase": 3500.0, "idade": 39, "ano_adm": 2024}, {"nome": "CELIO PAULINO DE LARA", "dt_nascto": "06/12/1984", "estado_civil": "CASADO(A)", "naturalidade": "CHAPADA DOS GUIMARAE", "sexo": "M", "bairro": "NOVA CANAA I", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "19/06/2024", "matricula": "010361", "situacao": "A", "salbase": 3500.0, "idade": 41, "ano_adm": 2024}, {"nome": "LENOIR LINO DE CARVALHO", "dt_nascto": "29/09/1968", "estado_civil": "SOLTEIRO(A)", "naturalidade": "FAXINAL DOS GUEDES", "sexo": "M", "bairro": "COXIPO DA PONTE", "cidade": "CUIABA", "uf": "MT", "funcao": "OPER DE BOMBA C", "salario": 2129.79, "dt_adm": "27/06/2024", "matricula": "010363", "situacao": "A", "salbase": 2129.79, "idade": 57, "ano_adm": 2024}, {"nome": "VALDECIO LUIZ RODRIGUES DA SILVA", "dt_nascto": "09/01/1979", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/07/2024", "matricula": "010364", "situacao": "A", "salbase": 3500.0, "idade": 47, "ano_adm": 2024}, {"nome": "VALDEMIR RODRIGUES DE LIMA", "dt_nascto": "15/05/1977", "estado_civil": "SOLTEIRO(A)", "naturalidade": "RONDONOPOLIS", "sexo": "M", "bairro": "JARDIM PARANA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/07/2024", "matricula": "010365", "situacao": "A", "salbase": 3500.0, "idade": 48, "ano_adm": 2024}, {"nome": "LEANDRO JUNIOR DA SILVA EUGENIO", "dt_nascto": "01/06/1989", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "15/07/2024", "matricula": "010376", "situacao": "A", "salbase": 3500.0, "idade": 36, "ano_adm": 2024}, {"nome": "DANIEL LEITE MACHADO", "dt_nascto": "07/02/1976", "estado_civil": "CASADO(A)", "naturalidade": "GUAPÓ", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "25/07/2024", "matricula": "010378", "situacao": "A", "salbase": 3500.0, "idade": 50, "ano_adm": 2024}, {"nome": "LUIZ FERNANDO DIAS DOS SANTOS", "dt_nascto": "26/07/1987", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CENTRO AMERICA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "25/07/2024", "matricula": "010379", "situacao": "A", "salbase": 3500.0, "idade": 38, "ano_adm": 2024}, {"nome": "KLEBER DE SOUZA BUENO", "dt_nascto": "16/06/1982", "estado_civil": "CASADO(A)", "naturalidade": "JI PARANA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "12/08/2024", "matricula": "010382", "situacao": "A", "salbase": 3500.0, "idade": 43, "ano_adm": 2024}, {"nome": "THIAGO LIMA SILVA", "dt_nascto": "29/07/1991", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "26/08/2024", "matricula": "010385", "situacao": "A", "salbase": 3500.0, "idade": 34, "ano_adm": 2024}, {"nome": "ERENILDO OLIVEIRA DE SOUZA", "dt_nascto": "29/05/1982", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "AG DE PORTARIA A", "salario": 2813.78, "dt_adm": "11/09/2024", "matricula": "010388", "situacao": "A", "salbase": 2813.78, "idade": 43, "ano_adm": 2024}, {"nome": "LUCIANO ANTONIO DE ALMEIDA", "dt_nascto": "26/09/1991", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "WANTUIL FREITAS", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "18/09/2024", "matricula": "010390", "situacao": "A", "salbase": 3500.0, "idade": 34, "ano_adm": 2024}, {"nome": "JOSE MARCIO COELHO DA SILVA", "dt_nascto": "29/04/1977", "estado_civil": "CASADO(A)", "naturalidade": "CORUMBA", "sexo": "M", "bairro": "SAO JOAO DEL REY", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "18/11/2024", "matricula": "010398", "situacao": "A", "salbase": 3500.0, "idade": 49, "ano_adm": 2024}, {"nome": "WANDERSON VINICIOS DA SILVA", "dt_nascto": "30/09/1988", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "MOVO MUNDO", "cidade": "VARZEA GRANDE", "uf": "MT", "funcao": "AG DE PORTARIA A", "salario": 2813.78, "dt_adm": "21/11/2024", "matricula": "010399", "situacao": "A", "salbase": 2813.78, "idade": 37, "ano_adm": 2024}, {"nome": "UDELSON", "dt_nascto": "", "estado_civil": "", "naturalidade": "BRASILEIRA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "26/11/2024", "matricula": "010400", "situacao": "A", "salbase": 3500.0, "idade": null, "ano_adm": 2024}, {"nome": "BEATRIZ SANTOS CUNHA", "dt_nascto": "29/10/2006", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "AUX CONTR MANUT", "salario": 2003.03, "dt_adm": "04/12/2024", "matricula": "010402", "situacao": "A", "salbase": 2003.03, "idade": 19, "ano_adm": 2024}, {"nome": "ALEX JUNIOR DE ABREU SANTOS", "dt_nascto": "24/08/1992", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "ALTOS DO BOA VISTA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "27/01/2025", "matricula": "010404", "situacao": "A", "salbase": 3500.0, "idade": 33, "ano_adm": 2025}, {"nome": "MARCIO PEREIRA DE PAULA", "dt_nascto": "10/10/1988", "estado_civil": "SOLTEIRO(A)", "naturalidade": "SANTA LUZIA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "27/01/2025", "matricula": "010405", "situacao": "A", "salbase": 3500.0, "idade": 37, "ano_adm": 2025}, {"nome": "ANDERSON DE CAMPOS SILVA", "dt_nascto": "28/11/1977", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "DOUTOR FABIO", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "12/02/2025", "matricula": "010407", "situacao": "A", "salbase": 3500.0, "idade": 48, "ano_adm": 2025}, {"nome": "JULIA SILVA MACHADO", "dt_nascto": "06/07/2006", "estado_civil": "SOLTEIRO(A)", "naturalidade": "BELO HORIZONTE", "sexo": "F", "bairro": "", "cidade": "", "uf": "", "funcao": "", "salario": 0.0, "dt_adm": "", "matricula": "", "situacao": "", "salbase": 0.0, "idade": 19, "ano_adm": null}, {"nome": "MARIA EDUARDA SOLINA DE CAMPOS", "dt_nascto": "22/11/2007", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "F", "bairro": "", "cidade": "", "uf": "", "funcao": "", "salario": 0.0, "dt_adm": "", "matricula": "", "situacao": "", "salbase": 0.0, "idade": 18, "ano_adm": null}, {"nome": "ADRIANO MARTINS DE SOUZA", "dt_nascto": "29/08/1983", "estado_civil": "CASADO(A)", "naturalidade": "SAO PAULO", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "10/03/2025", "matricula": "010412", "situacao": "A", "salbase": 3500.0, "idade": 42, "ano_adm": 2025}, {"nome": "WELLINGTON LOPES DE SOUZA", "dt_nascto": "01/08/1978", "estado_civil": "CASADO(A)", "naturalidade": "OLINDA", "sexo": "M", "bairro": "JARDIM UBIRAJARA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "17/03/2025", "matricula": "010413", "situacao": "A", "salbase": 3500.0, "idade": 47, "ano_adm": 2025}, {"nome": "ADEVALDO GONCALVES ALVES", "dt_nascto": "05/07/1969", "estado_civil": "CASADO(A)", "naturalidade": "RUY BARBOSA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "21/03/2025", "matricula": "010414", "situacao": "A", "salbase": 3500.0, "idade": 56, "ano_adm": 2025}, {"nome": "PAULO CESAR GONCALVES DE ARRUDA", "dt_nascto": "21/06/1971", "estado_civil": "", "naturalidade": "M RUA DAS PALMEIRAS", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "26/03/2025", "matricula": "010416", "situacao": "A", "salbase": 3500.0, "idade": 54, "ano_adm": 2025}, {"nome": "HATAIL SAMPAIO DE MIRANDA", "dt_nascto": "29/07/1986", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/04/2025", "matricula": "010417", "situacao": "A", "salbase": 3500.0, "idade": 39, "ano_adm": 2025}, {"nome": "MAURICIO MARQUES TROPALDI", "dt_nascto": "22/03/1984", "estado_civil": "CASADO(A)", "naturalidade": "ANDRADINA", "sexo": "M", "bairro": "JARDIM VITORIA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/04/2025", "matricula": "010418", "situacao": "A", "salbase": 3500.0, "idade": 42, "ano_adm": 2025}, {"nome": "SEBASTIAO RODRIGUES DA SILVA", "dt_nascto": "14/08/1986", "estado_civil": "SOLTEIRO(A)", "naturalidade": "POCONE", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "09/04/2025", "matricula": "010419", "situacao": "A", "salbase": 3500.0, "idade": 39, "ano_adm": 2025}, {"nome": "RONY DA SILVA", "dt_nascto": "23/05/1981", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "22/04/2025", "matricula": "010420", "situacao": "A", "salbase": 3500.0, "idade": 44, "ano_adm": 2025}, {"nome": "CID FELIPE SOARES BIZERRA", "dt_nascto": "19/06/1990", "estado_civil": "SOLTEIRO(A)", "naturalidade": "VARZEA GRANDE", "sexo": "M", "bairro": "JARDIM ELDORADO", "cidade": "VARZEA GRANDE", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "05/05/2025", "matricula": "010422", "situacao": "A", "salbase": 3500.0, "idade": 35, "ano_adm": 2025}, {"nome": "RONIVALDO CORREA", "dt_nascto": "29/03/1976", "estado_civil": "SOLTEIRO(A)", "naturalidade": "TRES LAGOAS", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MANOBRISTA B", "salario": 2643.25, "dt_adm": "05/05/2025", "matricula": "010424", "situacao": "A", "salbase": 2643.25, "idade": 50, "ano_adm": 2025}, {"nome": "ANGELINA SOUZA GOMES", "dt_nascto": "04/11/2008", "estado_civil": "SOLTEIRO(A)", "naturalidade": "PARAUAPEBAS", "sexo": "F", "bairro": "", "cidade": "", "uf": "", "funcao": "", "salario": 0.0, "dt_adm": "", "matricula": "", "situacao": "", "salbase": 0.0, "idade": 17, "ano_adm": null}, {"nome": "ANA MARIA DA SILVA CASANO", "dt_nascto": "25/04/2007", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "F", "bairro": "CHACARA DOS PINHEIRO", "cidade": "CUIABA", "uf": "MT", "funcao": "AUX ADM B", "salario": 1868.77, "dt_adm": "12/05/2025", "matricula": "010427", "situacao": "A", "salbase": 1868.77, "idade": 19, "ano_adm": 2025}, {"nome": "MARCIO AFONSO DE SOUZA", "dt_nascto": "19/05/1984", "estado_civil": "CASADO(A)", "naturalidade": "BARRA DO GARCAS", "sexo": "M", "bairro": "SAO SEBASTIAO", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "09/06/2025", "matricula": "010429", "situacao": "A", "salbase": 3500.0, "idade": 41, "ano_adm": 2025}, {"nome": "UALESTON DE ARRUDA", "dt_nascto": "04/05/1980", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "PEDRA 90", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "09/06/2025", "matricula": "010430", "situacao": "A", "salbase": 3500.0, "idade": 45, "ano_adm": 2025}, {"nome": "CLEITON BORGES JULIAO", "dt_nascto": "15/02/1988", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "RES ARICA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "09/06/2025", "matricula": "010431", "situacao": "A", "salbase": 3500.0, "idade": 38, "ano_adm": 2025}, {"nome": "WALTER PINTO DO MONTE", "dt_nascto": "09/09/1974", "estado_civil": "CASADO(A)", "naturalidade": "JAURU", "sexo": "M", "bairro": "RES. MADUREIRA", "cidade": "VARZEA GRANDE", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/07/2025", "matricula": "010435", "situacao": "A", "salbase": 3500.0, "idade": 51, "ano_adm": 2025}, {"nome": "WILLY WAGNER NUNES COSTA", "dt_nascto": "28/10/1982", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "ALTOS DA SERRA II", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/07/2025", "matricula": "010436", "situacao": "A", "salbase": 3500.0, "idade": 43, "ano_adm": 2025}, {"nome": "EMANOELLY VITORIA GONCALVES SANTOS", "dt_nascto": "24/10/2007", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "F", "bairro": "", "cidade": "", "uf": "", "funcao": "", "salario": 0.0, "dt_adm": "", "matricula": "", "situacao": "", "salbase": 0.0, "idade": 18, "ano_adm": null}, {"nome": "SAMARA OLIVEIRA RODRIGUES", "dt_nascto": "03/06/2007", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "F", "bairro": "", "cidade": "", "uf": "", "funcao": "", "salario": 0.0, "dt_adm": "", "matricula": "", "situacao": "", "salbase": 0.0, "idade": 18, "ano_adm": null}, {"nome": "SOPHIA RENATA CRUZ RODRIGUES", "dt_nascto": "21/01/2010", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "F", "bairro": "", "cidade": "", "uf": "", "funcao": "", "salario": 0.0, "dt_adm": "", "matricula": "", "situacao": "", "salbase": 0.0, "idade": 16, "ano_adm": null}, {"nome": "ISMAEL SANTOS DA SILVA", "dt_nascto": "29/03/1990", "estado_civil": "SOLTEIRO(A)", "naturalidade": "SUZANO", "sexo": "M", "bairro": "PEDRA 90", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "25/08/2025", "matricula": "010443", "situacao": "A", "salbase": 3500.0, "idade": 36, "ano_adm": 2025}, {"nome": "DONISETE MENDES DE SOUZA", "dt_nascto": "14/03/1968", "estado_civil": "CASADO(A)", "naturalidade": "SANTA ISABEL DO IVAI", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "01/09/2025", "matricula": "010444", "situacao": "A", "salbase": 3500.0, "idade": 58, "ano_adm": 2025}, {"nome": "REINER MARTINS RODRIGUES", "dt_nascto": "25/08/1976", "estado_civil": "SOLTEIRO(A)", "naturalidade": "JUSCIMEIRA", "sexo": "M", "bairro": "SANTA IZABEL", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "12/09/2025", "matricula": "010446", "situacao": "A", "salbase": 3500.0, "idade": 49, "ano_adm": 2025}, {"nome": "ADAIR DA SILVA", "dt_nascto": "23/04/1977", "estado_civil": "DIVORCIADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "TANCREDO NEVES", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "12/09/2025", "matricula": "010447", "situacao": "A", "salbase": 3500.0, "idade": 49, "ano_adm": 2025}, {"nome": "JEAN CARLOS DUQUE DOS REIS", "dt_nascto": "16/08/2009", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "", "cidade": "", "uf": "", "funcao": "", "salario": 0.0, "dt_adm": "", "matricula": "", "situacao": "", "salbase": 0.0, "idade": 16, "ano_adm": null}, {"nome": "KAWANNY DO NASCIMENTO SANCOVICHE", "dt_nascto": "29/10/2009", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "F", "bairro": "", "cidade": "", "uf": "", "funcao": "", "salario": 0.0, "dt_adm": "", "matricula": "", "situacao": "", "salbase": 0.0, "idade": 16, "ano_adm": null}, {"nome": "JOAO BATISTA MARTINS DA SILVA", "dt_nascto": "25/11/1991", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CACERES", "sexo": "M", "bairro": "DOM AQUINO", "cidade": "CUIABA", "uf": "MT", "funcao": "AG DE PORTARIA A", "salario": 2813.78, "dt_adm": "22/09/2025", "matricula": "010450", "situacao": "A", "salbase": 2813.78, "idade": 34, "ano_adm": 2025}, {"nome": "PERSIO LUIS AMORIM", "dt_nascto": "21/04/1973", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "AG DE PORTARIA A", "salario": 2813.78, "dt_adm": "22/09/2025", "matricula": "010451", "situacao": "A", "salbase": 2813.78, "idade": 53, "ano_adm": 2025}, {"nome": "RICARDO DE ALMEIDA FREITAS", "dt_nascto": "15/04/1977", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "JARDIM FLORIANOPOLIS", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "01/10/2025", "matricula": "010452", "situacao": "A", "salbase": 3500.0, "idade": 49, "ano_adm": 2025}, {"nome": "CLEUDIMAR DOS SANTOS LOURENCO", "dt_nascto": "12/09/1977", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "JARDIM MONTE LIBANO", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "01/10/2025", "matricula": "010453", "situacao": "A", "salbase": 3500.0, "idade": 48, "ano_adm": 2025}, {"nome": "ALEXSSANDRO MIRANDA FRAGA", "dt_nascto": "21/03/1997", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "COXIPO DA PONTE", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "01/10/2025", "matricula": "010454", "situacao": "A", "salbase": 3500.0, "idade": 29, "ano_adm": 2025}, {"nome": "EVERTON MENEZES ORMOND", "dt_nascto": "15/01/1985", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "RES SANTA INES", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "01/10/2025", "matricula": "010455", "situacao": "A", "salbase": 3500.0, "idade": 41, "ano_adm": 2025}, {"nome": "RONICLEI TOMAZ DE LARA", "dt_nascto": "10/07/1992", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "JD MANANCIAL 02", "cidade": "CUIABA", "uf": "MT", "funcao": "MANOBRISTA B", "salario": 2643.25, "dt_adm": "07/10/2025", "matricula": "010456", "situacao": "A", "salbase": 2643.25, "idade": 33, "ano_adm": 2025}, {"nome": "CLAUDIA PULQUERIO DA SILVA", "dt_nascto": "21/12/1988", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "F", "bairro": "ALTOS DO CUIAJ", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA VANS", "salario": 2465.4, "dt_adm": "09/10/2025", "matricula": "010457", "situacao": "A", "salbase": 2465.4, "idade": 37, "ano_adm": 2025}, {"nome": "DIVINO MOREIRA ROSA E SILVA", "dt_nascto": "27/02/1973", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "JARDIM NOVO MUNDO", "cidade": "VARZEA GRANDE", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "09/10/2025", "matricula": "010458", "situacao": "A", "salbase": 3500.0, "idade": 53, "ano_adm": 2025}, {"nome": "LUIS FERNANDO AGUIAR DA SILVA SOUZA", "dt_nascto": "29/05/1983", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "SAO SIMAO", "cidade": "VARZEA GRANDE", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "16/10/2025", "matricula": "010459", "situacao": "A", "salbase": 3500.0, "idade": 42, "ano_adm": 2025}, {"nome": "SANDRO GONCALVES DA SILVA", "dt_nascto": "02/12/1978", "estado_civil": "SOLTEIRO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "SAO SIMAO", "cidade": "VARZEA GRANDE", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "27/10/2025", "matricula": "010460", "situacao": "A", "salbase": 3500.0, "idade": 47, "ano_adm": 2025}, {"nome": "CLAUDIO MAXIMO DE FIGUEIREDO", "dt_nascto": "20/04/1980", "estado_civil": "SOLTEIRO(A)", "naturalidade": "RIO DE JANEIRO", "sexo": "M", "bairro": "PARQUE DO LAGO", "cidade": "VARZEA GRANDE", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "27/10/2025", "matricula": "010461", "situacao": "A", "salbase": 3500.0, "idade": 46, "ano_adm": 2025}, {"nome": "ROBERTO DOS SANTOS ARRUDA", "dt_nascto": "16/05/1979", "estado_civil": "CASADO(A)", "naturalidade": "OSASCO", "sexo": "M", "bairro": "SANTA IZABEL", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "27/10/2025", "matricula": "010462", "situacao": "A", "salbase": 3500.0, "idade": 46, "ano_adm": 2025}, {"nome": "FRANCISCO GOMES CARDOSO", "dt_nascto": "07/06/1979", "estado_civil": "CASADO(A)", "naturalidade": "FORTALEZA", "sexo": "M", "bairro": "AREA RURAL DE CUIABA", "cidade": "CUIABA", "uf": "MT", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "03/11/2025", "matricula": "010463", "situacao": "A", "salbase": 3500.0, "idade": 46, "ano_adm": 2025}, {"nome": "JEFTE FELIX SILVA DE OLIVEIRA", "dt_nascto": "27/03/1985", "estado_civil": "SOLTEIRO(A)", "naturalidade": "BELO HORIZONTE", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "17/11/2025", "matricula": "010464", "situacao": "A", "salbase": 3500.0, "idade": 41, "ano_adm": 2025}, {"nome": "REINALDO PAIXAO SANTANA DOS SANTOS", "dt_nascto": "29/03/1981", "estado_civil": "CASADO(A)", "naturalidade": "CUIABA", "sexo": "M", "bairro": "CUIABA", "cidade": "MT", "uf": "78", "funcao": "MOTORISTA", "salario": 3500.0, "dt_adm": "17/11/2025", "matricula": "010465", "situacao": "A", "salbase": 3500.0, "idade": 45, "ano_adm": 2025}];
+
+// ============================================================
+// NAV
+// ============================================================
+const sectionNames = {
+  'visao-geral': 'Visão Geral',
+  'pessoal': 'Perfil da Equipe',
+  'financeiro': 'Folha Salarial',
+  'admissoes': 'Admissões',
+  'colaboradores': 'Colaboradores',
+};
+
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('section-' + id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick') && n.getAttribute('onclick').includes(id)) n.classList.add('active');
+  });
+  document.getElementById('topbar-title').textContent = sectionNames[id] || id;
+}
+
+// Date
+const now = new Date();
+document.getElementById('topbar-date').textContent = now.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+// ============================================================
+// CHART HELPERS
+// ============================================================
+const PURPLE = '#7c6df5';
+const PURPLE2 = '#a594f9';
+const PURPLE3 = '#c4b7ff';
+const TEAL = '#2dd4bf';
+const CORAL = '#f4845f';
+const AMBER = '#fbbf24';
+const GREEN = '#4ade80';
+const PINK = '#f472b6';
+const GRAY = '#3a3a50';
+
+function chartDefaults() {
+  Chart.defaults.color = '#5e5c75';
+  Chart.defaults.font.family = "'DM Sans', sans-serif";
+  Chart.defaults.font.size = 12;
+  Chart.defaults.plugins.legend.display = false;
+  Chart.defaults.plugins.tooltip.backgroundColor = '#1c1c26';
+  Chart.defaults.plugins.tooltip.borderColor = 'rgba(255,255,255,0.08)';
+  Chart.defaults.plugins.tooltip.borderWidth = 1;
+  Chart.defaults.plugins.tooltip.titleColor = '#f0eff4';
+  Chart.defaults.plugins.tooltip.bodyColor = '#9b99ae';
+  Chart.defaults.plugins.tooltip.padding = 10;
+  Chart.defaults.plugins.tooltip.cornerRadius = 8;
+}
+
+// ============================================================
+// HORIZONTAL BAR LISTS
+// ============================================================
+function renderHBar(containerId, data, colorFn) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const entries = Object.entries(data);
+  const max = Math.max(...entries.map(e => e[1]));
+  container.innerHTML = entries.map(([label, val]) => {
+    const pct = Math.round((val / max) * 100);
+    const color = colorFn ? colorFn(label) : PURPLE;
+    return `<div class="hbar-item">
+      <div class="hbar-meta">
+        <span class="hbar-name">${label}</span>
+        <span class="hbar-count">${val.toLocaleString('pt-BR')}</span>
+      </div>
+      <div class="hbar-track">
+        <div class="hbar-fill" style="width:${pct}%;background:${color}"></div>
+      </div>
+    </div>`;
+  }).join('');
+  // Animate bars
+  setTimeout(() => {
+    container.querySelectorAll('.hbar-fill').forEach(bar => {
+      const w = bar.style.width;
+      bar.style.width = '0%';
+      requestAnimationFrame(() => { bar.style.width = w; });
+    });
+  }, 50);
+}
+
+const funcaoColors = { 'MOTORISTA': PURPLE, 'PROMOT DE VENDAS': TEAL, 'AG DE PORTARIA A': CORAL, 'MOTORISTA VANS': AMBER, 'AUX.TRAFEGO A2': GREEN, 'MANOBRISTA B': PINK, 'MOT INSTRUTOR': PURPLE2, 'GER OPER JUNIOR': '#60a5fa' };
+
+function getFuncaoColor(f) { return funcaoColors[f] || GRAY; }
+
+// ============================================================
+// INIT CHARTS
+// ============================================================
+function initCharts() {
+  chartDefaults();
+
+  // --- Sexo donut ---
+  new Chart(document.getElementById('chart-sexo'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Masculino', 'Feminino'],
+      datasets: [{ data: [229, 20], backgroundColor: [PURPLE, PINK], borderWidth: 0, hoverOffset: 4 }]
+    },
+    options: {
+      cutout: '72%',
+      responsive: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw}` } } }
+    }
+  });
+
+  // --- Estado Civil donut ---
+  new Chart(document.getElementById('chart-ec'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Casado(a)', 'Solteiro(a)', 'Divorciado(a)'],
+      datasets: [{ data: [134, 94, 1], backgroundColor: [TEAL, PURPLE2, CORAL], borderWidth: 0, hoverOffset: 4 }]
+    },
+    options: {
+      cutout: '72%',
+      responsive: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw}` } } }
+    }
+  });
+
+  // --- Faixas etárias ---
+  new Chart(document.getElementById('chart-age'), {
+    type: 'bar',
+    data: {
+      labels: ['18-25', '26-35', '36-45', '46-55', '56+'],
+      datasets: [{
+        label: 'Colaboradores',
+        data: [7, 18, 88, 109, 23],
+        backgroundColor: [PURPLE + '80', PURPLE + '90', PURPLE, PURPLE, PURPLE2],
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#5e5c75' } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#5e5c75', stepSize: 20 }, beginAtZero: true }
+      }
+    }
+  });
+
+  // --- Sexo por situação ---
+  new Chart(document.getElementById('chart-sexo-sit'), {
+    type: 'bar',
+    data: {
+      labels: ['Masculino', 'Feminino'],
+      datasets: [
+        { label: 'Ativo', data: [222, 19], backgroundColor: PURPLE, borderRadius: 6, borderSkipped: false },
+        { label: 'Inativo', data: [7, 1], backgroundColor: CORAL, borderRadius: 6, borderSkipped: false },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          align: 'end',
+          labels: { color: '#9b99ae', boxWidth: 10, boxHeight: 10, borderRadius: 3, padding: 12, font: { size: 11 } }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#5e5c75' } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#5e5c75' }, beginAtZero: true }
+      }
+    }
+  });
+
+  // --- Salários faixas ---
+  new Chart(document.getElementById('chart-salarios'), {
+    type: 'bar',
+    data: {
+      labels: ['Até R$2k', 'R$2k-3k', 'R$3k-3.5k', 'R$3.5k-5k', 'Acima R$5k'],
+      datasets: [{
+        label: 'Colaboradores',
+        data: [9, 21, 1, 208, 2],
+        backgroundColor: [PURPLE + '70', PURPLE + '80', PURPLE + '90', PURPLE, TEAL],
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#5e5c75', font: { size: 11 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#5e5c75' }, beginAtZero: true }
+      }
+    }
+  });
+
+  // --- Salário médio por função ---
+  const funcoesSalarios = calcSalByFuncao();
+  new Chart(document.getElementById('chart-sal-funcao'), {
+    type: 'bar',
+    data: {
+      labels: funcoesSalarios.map(f => f.funcao),
+      datasets: [{
+        label: 'Salário médio',
+        data: funcoesSalarios.map(f => f.media),
+        backgroundColor: funcoesSalarios.map(f => getFuncaoColor(f.funcao)),
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` R$ ${ctx.raw.toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}` } } },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#5e5c75', callback: v => 'R$' + (v/1000).toFixed(1) + 'k' } },
+        y: { grid: { display: false }, ticks: { color: '#5e5c75', font: { size: 11 } } }
+      }
+    }
+  });
+
+  // --- Admissões por ano ---
+  new Chart(document.getElementById('chart-adm-anos'), {
+    type: 'bar',
+    data: {
+      labels: ['2021', '2022', '2023', '2024', '2025'],
+      datasets: [{
+        label: 'Admissões',
+        data: [124, 36, 8, 34, 39],
+        backgroundColor: [PURPLE, TEAL, CORAL, AMBER, GREEN],
+        borderRadius: 8,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.raw} admissões` } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#5e5c75' } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#5e5c75', stepSize: 20 }, beginAtZero: true }
+      }
+    }
+  });
+
+  // --- Crescimento acumulado ---
+  const cumData = [124, 160, 168, 202, 241];
+  new Chart(document.getElementById('chart-adm-acum'), {
+    type: 'line',
+    data: {
+      labels: ['2021', '2022', '2023', '2024', '2025'],
+      datasets: [{
+        label: 'Colaboradores ativos',
+        data: cumData,
+        borderColor: PURPLE,
+        backgroundColor: PURPLE + '18',
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: PURPLE,
+        pointBorderColor: '#1c1c26',
+        pointBorderWidth: 2,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.raw} colaboradores` } } },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#5e5c75' } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#5e5c75' }, beginAtZero: false, min: 100 }
+      }
+    }
+  });
+}
+
+function calcSalByFuncao() {
+  const map = {};
+  RECORDS.forEach(r => {
+    if (!r.funcao || !r.salario) return;
+    if (!map[r.funcao]) map[r.funcao] = { sum: 0, cnt: 0 };
+    map[r.funcao].sum += r.salario;
+    map[r.funcao].cnt += 1;
+  });
+  return Object.entries(map)
+    .map(([funcao, v]) => ({ funcao, media: v.sum / v.cnt, cnt: v.cnt }))
+    .filter(f => f.cnt > 0)
+    .sort((a, b) => b.media - a.media)
+    .slice(0, 7);
+}
+
+// ============================================================
+// NATURALIDADE HBAR
+// ============================================================
+function initNaturalidade() {
+  const cnt = {};
+  RECORDS.forEach(r => {
+    if (r.naturalidade) cnt[r.naturalidade] = (cnt[r.naturalidade] || 0) + 1;
+  });
+  const sorted = Object.entries(cnt).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  renderHBar('hbar-naturalidade', Object.fromEntries(sorted), () => TEAL);
+}
+
+// ============================================================
+// TOP SALARIOS HBAR
+// ============================================================
+function initTopSal() {
+  const sorted = [...RECORDS].filter(r => r.salario > 100).sort((a, b) => b.salario - a.salario).slice(0, 10);
+  const data = {};
+  sorted.forEach(r => { data[r.nome.split(' ').slice(0,3).join(' ')] = r.salario; });
+  const max = Math.max(...Object.values(data));
+  const container = document.getElementById('hbar-top-sal');
+  if (!container) return;
+  container.innerHTML = sorted.map(r => {
+    const name = r.nome.split(' ').slice(0,3).join(' ');
+    const pct = Math.round((r.salario / max) * 100);
+    return `<div class="hbar-item">
+      <div class="hbar-meta">
+        <span class="hbar-name">${name}</span>
+        <span class="hbar-count">R$ ${r.salario.toLocaleString('pt-BR', {minimumFractionDigits:2})}</span>
+      </div>
+      <div class="hbar-track">
+        <div class="hbar-fill" style="width:${pct}%;background:${GREEN}"></div>
+      </div>
+    </div>`;
+  }).join('');
+  setTimeout(() => {
+    container.querySelectorAll('.hbar-fill').forEach(bar => {
+      const w = bar.style.width;
+      bar.style.width = '0%';
+      requestAnimationFrame(() => { bar.style.width = w; });
+    });
+  }, 50);
+}
+
+// ============================================================
+// TABLE
+// ============================================================
+let filteredRecords = [];
+let currentPage = 1;
+const PAGE_SIZE = 20;
+let sortCol = 'matricula';
+let sortDir = 1;
+
+function initTable() {
+  // Populate filter dropdowns
+  const funcaoSet = [...new Set(RECORDS.map(r => r.funcao).filter(Boolean))].sort();
+  const fSelect = document.getElementById('filter-funcao');
+  funcaoSet.forEach(f => {
+    const opt = document.createElement('option');
+    opt.value = f;
+    opt.textContent = f;
+    fSelect.appendChild(opt);
+  });
+
+  const cidadeSet = [...new Set(RECORDS.map(r => r.cidade).filter(Boolean))].sort();
+  const cSelect = document.getElementById('filter-cidade');
+  cidadeSet.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c;
+    opt.textContent = c;
+    cSelect.appendChild(opt);
+  });
+
+  filteredRecords = [...RECORDS];
+  renderTable();
+}
+
+function filterTable() {
+  const q = document.getElementById('search-input').value.toLowerCase().trim();
+  const funcao = document.getElementById('filter-funcao').value;
+  const situacao = document.getElementById('filter-situacao').value;
+  const cidade = document.getElementById('filter-cidade').value;
+
+  filteredRecords = RECORDS.filter(r => {
+    if (q && !`${r.nome} ${r.funcao} ${r.matricula} ${r.cidade}`.toLowerCase().includes(q)) return false;
+    if (funcao && r.funcao !== funcao) return false;
+    if (situacao && r.situacao !== situacao) return false;
+    if (cidade && r.cidade !== cidade) return false;
+    return true;
+  });
+  currentPage = 1;
+  renderTable();
+}
+
+function sortTable(col) {
+  if (sortCol === col) sortDir *= -1;
+  else { sortCol = col; sortDir = 1; }
+  document.querySelectorAll('th').forEach(th => th.classList.remove('sorted'));
+  document.querySelector(`th[data-col="${col}"]`).classList.add('sorted');
+  filteredRecords.sort((a, b) => {
+    let va = a[col] || '', vb = b[col] || '';
+    if (typeof va === 'number') return (va - vb) * sortDir;
+    return String(va).localeCompare(String(vb)) * sortDir;
+  });
+  renderTable();
+}
+
+function renderTable() {
+  const body = document.getElementById('table-body');
+  const total = filteredRecords.length;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const slice = filteredRecords.slice(start, start + PAGE_SIZE);
+
+  document.getElementById('table-count').textContent = `${total} resultado${total !== 1 ? 's' : ''}`;
+
+  body.innerHTML = slice.map(r => {
+    const salFormatted = r.salario ? `R$ ${r.salario.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})}` : '—';
+    const badgeClass = r.situacao === 'A' ? 'badge-active' : 'badge-inactive';
+    const badgeLabel = r.situacao === 'A' ? 'Ativo' : 'Inativo';
+    const idade = r.idade ? `${r.idade} anos` : '—';
+    return `<tr>
+      <td>${r.matricula || '—'}</td>
+      <td class="primary">${r.nome || '—'}</td>
+      <td>${r.funcao || '—'}</td>
+      <td>${salFormatted}</td>
+      <td>${r.cidade || '—'}</td>
+      <td>${r.dt_adm || '—'}</td>
+      <td>${idade}</td>
+      <td><span class="badge ${badgeClass}">${badgeLabel}</span></td>
+    </tr>`;
+  }).join('');
+
+  // Pagination
+  const pag = document.getElementById('pagination');
+  if (totalPages <= 1) { pag.innerHTML = ''; return; }
+  let buttons = `<button class="page-btn" onclick="goPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>←</button>`;
+  const range = getPageRange(currentPage, totalPages);
+  range.forEach(p => {
+    if (p === '...') buttons += `<span style="padding:6px 4px;color:var(--text3)">…</span>`;
+    else buttons += `<button class="page-btn ${p === currentPage ? 'active' : ''}" onclick="goPage(${p})">${p}</button>`;
+  });
+  buttons += `<button class="page-btn" onclick="goPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>→</button>`;
+  pag.innerHTML = buttons;
+}
+
+function goPage(p) {
+  const total = Math.ceil(filteredRecords.length / PAGE_SIZE);
+  if (p < 1 || p > total) return;
+  currentPage = p;
+  renderTable();
+}
+
+function getPageRange(current, total) {
+  if (total <= 7) return Array.from({length: total}, (_, i) => i + 1);
+  if (current <= 4) return [1,2,3,4,5,'...',total];
+  if (current >= total - 3) return [1,'...',total-4,total-3,total-2,total-1,total];
+  return [1,'...',current-1,current,current+1,'...',total];
+}
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+  initCharts();
+  renderHBar('hbar-funcoes', DATA.funcoes, getFuncaoColor);
+  renderHBar('hbar-cidades', DATA.cidades, () => TEAL);
+  initNaturalidade();
+  initTopSal();
+  initTable();
+});
+</script>
+</body>
+</html>
